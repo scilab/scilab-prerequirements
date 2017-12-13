@@ -631,16 +631,17 @@ case $DEPENDENCY in
 
         LIBTHIRDPARTYDIR=$INSTALLDIR/../lib/thirdparty
         
-        # Only provide ref-blas ref-lapack until we have a reproductible
-        # ATLAS build
+        # Provide OpenBLAS blas and lapack
         rm -f $LIBTHIRDPARTYDIR/libatlas.*
-        # cp -d $INSTALLDIR/lib/libatlas.* $LIBTHIRDPARTYDIR/
-
         rm -f $LIBTHIRDPARTYDIR/lib*blas.*
-        cp -d $INSTALLDIR/lib/libblas.* $LIBTHIRDPARTYDIR/
-
         rm -f $LIBTHIRDPARTYDIR/liblapack.*
-        cp -d $INSTALLDIR/lib/liblapack.* $LIBTHIRDPARTYDIR/
+        cp -d $INSTALLDIR/lib/libopenblas.so* $LIBTHIRDPARTYDIR/
+        cd $LIBTHIRDPARTYDIR
+        ln -s libopenblas.so libblas.so
+        ln -s libopenblas.so.0 libblas.so.3
+        ln -s libopenblas.so liblapack.so
+        ln -s libopenblas.so.0 liblapack.so.3
+        cd -
 
         rm -f $LIBTHIRDPARTYDIR/libarpack.*
         cp -d $INSTALLDIR/lib/libarpack.* $LIBTHIRDPARTYDIR/
