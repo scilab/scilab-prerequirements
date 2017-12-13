@@ -59,6 +59,7 @@ echo
 ################################
 LAPACK_VERSION=3.6.0
 ATLAS_VERSION=3.10.2
+OPENBLAS_VERSION=0.2.20
 ANT_VERSION=1.9.4
 ARPACK_VERSION=3.1.5
 CURL_VERSION=7.43.0
@@ -85,7 +86,7 @@ function download_dependencies() {
     [ ! -e lapack-$LAPACK_VERSION.tgz ] && wget http://www.netlib.org/lapack/lapack-$LAPACK_VERSION.tgz
     [ ! -e atlas$ATLAS_VERSION.tar.bz2 ] && wget http://downloads.sourceforge.net/project/math-atlas/Stable/$ATLAS_VERSION/atlas$ATLAS_VERSION.tar.bz2
     [ ! -e apache-ant-$ANT_VERSION-bin.tar.gz ] && wget http://archive.apache.org/dist/ant/binaries/apache-ant-$ANT_VERSION-bin.tar.gz
-    [ ! -e apache-ant-$ANT_VERSION-bin.tar.gz ] && wget http://archive.apache.org/dist/ant/binaries/apache-ant-$ANT_VERSION-bin.tar.gz
+    [ ! -e OpenBLAS-$OPENBLAS_VERSION.tar.gz ] && wget https://github.com/xianyi/OpenBLAS/archive/v$OPENBLAS_VERSION.tar.gz && mv v$OPENBLAS_VERSION.tar.gz OpenBLAS-$OPENBLAS_VERSION.tar.gz 
     [ ! -e arpack-ng-$ARPACK_VERSION.tar.gz ] && wget https://github.com/opencollab/arpack-ng/archive/$ARPACK_VERSION.tar.gz && mv $ARPACK_VERSION.tar.gz arpack-ng-$ARPACK_VERSION.tar.gz 
     [ ! -e curl-$CURL_VERSION.tar.gz ] && wget http://curl.haxx.se/download/curl-$CURL_VERSION.tar.gz
     [ ! -e eigen-$EIGEN_VERSION.tar.gz ] && wget http://bitbucket.org/eigen/eigen/get/$EIGEN_VERSION.tar.gz && mv $EIGEN_VERSION.tar.gz eigen-$EIGEN_VERSION.tar.gz
@@ -179,6 +180,18 @@ EOF
     # lapack
     ln -fs libatlas.so.$ATLAS_VERSION $INSTALLDIR/lib/liblapack.so.3
     ln -fs libatlas.so.$ATLAS_VERSION $INSTALLDIR/lib/liblapack.so
+}
+
+function build_openblas() {
+    [ -d OpenBLAS-$OPENBLAS_VERSION ] && rm -fr OpenBLAS-$OPENBLAS_VERSION
+
+    tar -xzf OpenBLAS-$OPENBLAS_VERSION.tar.gz
+    cd OpenBLAS-$OPENBLAS_VERSION
+    make TARGET=NEHALEM
+    make install DESTDIR=$INSTALLDIR
+    cd -
+
+    clean_static
 }
 
 function build_ant() {
@@ -539,6 +552,7 @@ case $DEPENDENCY in
     "versions")
         echo "BLAS_VERSION        = $BLAS_VERSION"
         echo "LAPACK_VERSION      = $LAPACK_VERSION"
+        echo "OPENBLAS_VERSION    = $OPENBLAS_VERSION"
         echo "ATLAS_VERSION       = $ATLAS_VERSION"
         echo "ANT_VERSION         = $ANT_VERSION"
         echo "ARPACK_VERSION      = $ARPACK_VERSION"
@@ -583,7 +597,7 @@ case $DEPENDENCY in
         exit 0;
         ;;
 
-    "blas" | "lapack" | "atlas" | "ant" | "arpack" | "curl" | "eigen" | "fftw" | "hdf5" | "libxml2" | "matio" | "openssl" | "openssh" | "pcre" | "suitesparse" | "tcl" | "tk" | "zlib" | "gluegen" | "jogl" )
+    "blas" | "lapack" | "openblas" | "atlas" | "ant" | "arpack" | "curl" | "eigen" | "fftw" | "hdf5" | "libxml2" | "matio" | "openssl" | "openssh" | "pcre" | "suitesparse" | "tcl" | "tk" | "zlib" | "gluegen" | "jogl" )
         build_$DEPENDENCY
         exit 0;
         ;;
