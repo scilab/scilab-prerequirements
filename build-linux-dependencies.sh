@@ -635,7 +635,7 @@ case $DEPENDENCY in
         rm -f $LIBTHIRDPARTYDIR/libatlas.*
         rm -f $LIBTHIRDPARTYDIR/lib*blas.*
         rm -f $LIBTHIRDPARTYDIR/liblapack.*
-        cp -d $INSTALLDIR/lib/libopenblas.so* $LIBTHIRDPARTYDIR/
+        cp -d $INSTALLDIR/lib/libopenblas*.so* $LIBTHIRDPARTYDIR/
         cd $LIBTHIRDPARTYDIR
         ln -s libopenblas.so libblas.so
         ln -s libopenblas.so.0 libblas.so.3
@@ -695,8 +695,6 @@ case $DEPENDENCY in
         rm -f $LIBTHIRDPARTYDIR/libxml2.*
         cp -d $INSTALLDIR/lib/libxml2.* $LIBTHIRDPARTYDIR/
 
-        rm -f $LIBTHIRDPARTYDIR/libz.*
-        cp -d $INSTALLDIR/lib/libz.* $LIBTHIRDPARTYDIR/
 
         # In case these libraries are not found on the system.
         #
@@ -705,11 +703,12 @@ case $DEPENDENCY in
         # The mandatory libraries are the ones documented in the Linux Standard
         # Base 5.0 .
         [ ! -d $LIBTHIRDPARTYDIR/redist ] && mkdir $LIBTHIRDPARTYDIR/redist/
-        # libgfortran.so.1 and libgfortran.so.3
+        # libgfortran.so.1 libgfortran.so.3
         rm -rf $LIBTHIRDPARTYDIR/libquadmath.*
         rm -f $LIBTHIRDPARTYDIR/libgfortran.*
         rm -f $LIBTHIRDPARTYDIR/redist/libquadmath.*
         rm -f $LIBTHIRDPARTYDIR/redist/libgfortran.*
+        cp -d $USRDIR/libgfortran.so.1* $LIBTHIRDPARTYDIR/redist/
         cp -d $USRDIR/libgfortran.so.3* $LIBTHIRDPARTYDIR/redist/
         # libgomp.1.0
         rm -f $LIBTHIRDPARTYDIR/libgomp.*
@@ -723,12 +722,17 @@ case $DEPENDENCY in
         cp -d $USRDIR/libncurses.so.5.5 $LIBTHIRDPARTYDIR/redist/
         ln -s libncurses.so.5.5 $LIBTHIRDPARTYDIR/redist/libncurses.so.5
         ln -s libncurses.so.5.5 $LIBTHIRDPARTYDIR/redist/libncurses.so
+	# libz
+        rm -f $LIBTHIRDPARTYDIR/libz.*
+        rm -f $LIBTHIRDPARTYDIR/redist/libz.*
+        cp -d $USRDIR/libz.* $LIBTHIRDPARTYDIR/redist/
 
 
         # Strip libraries (exporting the debuginfo to another file) to
         # reduce file size and thus startup time
-        find $LIBTHIRDPARTYDIR -name '*.so*' | while read file ;
+        find $LIBTHIRDPARTYDIR -name '*.so*' -type f | while read file ;
         do
+	    [[ $file == *.debug ]] && continue
             objcopy --only-keep-debug $file $file.debug
             objcopy --strip-debug $file
             objcopy --add-gnu-debuglink=$file.debug $file
