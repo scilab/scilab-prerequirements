@@ -725,7 +725,7 @@ case $DEPENDENCY in
 	# libz
         rm -f $LIBTHIRDPARTYDIR/libz.*
         rm -f $LIBTHIRDPARTYDIR/redist/libz.*
-        cp -d $USRDIR/libz.* $LIBTHIRDPARTYDIR/redist/
+        cp -d $LIBDIR/libz.* $LIBTHIRDPARTYDIR/redist/
 
 
         # Strip libraries (exporting the debuginfo to another file) to
