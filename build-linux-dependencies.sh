@@ -188,7 +188,7 @@ function build_openblas() {
     tar -xzf OpenBLAS-$OPENBLAS_VERSION.tar.gz
     cd OpenBLAS-$OPENBLAS_VERSION
     make TARGET=NEHALEM
-    make install DESTDIR=$INSTALLDIR
+    make PREFIX=$INSTALLDIR install
     cd -
 
     clean_static
