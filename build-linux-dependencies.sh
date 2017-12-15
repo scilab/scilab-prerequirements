@@ -722,10 +722,11 @@ case $DEPENDENCY in
         cp -d $USRDIR/libncurses.so.5.5 $LIBTHIRDPARTYDIR/redist/
         ln -s libncurses.so.5.5 $LIBTHIRDPARTYDIR/redist/libncurses.so.5
         ln -s libncurses.so.5.5 $LIBTHIRDPARTYDIR/redist/libncurses.so
-	# libz
+
+	# CentOS 5 libz is too old, but libz should then be in redist
         rm -f $LIBTHIRDPARTYDIR/libz.*
         rm -f $LIBTHIRDPARTYDIR/redist/libz.*
-        cp -d $LIBDIR/libz.* $LIBTHIRDPARTYDIR/redist/
+	cp -d $INSTALLDIR/lib/libz.* $LIBTHIRDPARTYDIR/redist/
 
 
         # Strip libraries (exporting the debuginfo to another file) to
