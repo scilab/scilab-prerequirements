@@ -76,6 +76,7 @@ SUITESPARSE_VERSION=4.4.5
 TCL_VERSION=8.5.15
 TK_VERSION=8.5.15
 ZLIB_VERSION=1.2.8
+PNG_VERSION=1.6.34
 JOGL_VERSION=2.2.4
 
 FOP_VERSION=2.0
@@ -102,6 +103,7 @@ function download_dependencies() {
     [ ! -e tcl$TCL_VERSION-src.tar.gz ] && wget http://prdownloads.sourceforge.net/tcl/tcl$TCL_VERSION-src.tar.gz
     [ ! -e tk$TK_VERSION-src.tar.gz ] && wget http://prdownloads.sourceforge.net/tcl/tk$TK_VERSION-src.tar.gz
     [ ! -e zlib-$ZLIB_VERSION.tar.gz ] && wget http://downloads.sourceforge.net/project/libpng/zlib/$ZLIB_VERSION/zlib-$ZLIB_VERSION.tar.gz
+    [ ! -e libpng-$PNG_VERSION.tar.gz ] && wget http://prdownloads.sourceforge.net/libpng/libpng-$PNG_VERSION.tar.gz
     [ ! -e gluegen-v$JOGL_VERSION.tar.7z ] && wget https://jogamp.org/deployment/archive/rc/v$JOGL_VERSION/archive/Sources/gluegen-v$JOGL_VERSION.tar.7z
     [ ! -e jogl-v$JOGL_VERSION.tar.7z ] && wget https://jogamp.org/deployment/archive/rc/v$JOGL_VERSION/archive/Sources/jogl-v$JOGL_VERSION.tar.7z
 
@@ -263,6 +265,19 @@ function build_zlib() {
     cd zlib-$ZLIB_VERSION
     ./configure "$@" --prefix=
     make -j
+    make install DESTDIR=$INSTALLDIR
+    cd -
+
+    clean_static
+}
+
+function build_libpng() {
+    [ -d libpng-$PNG_VERSION ] && rm -fr libpng-$PNG_VERSION
+
+    tar -xzf libpng-$PNG_VERSION.tar.gz
+    cd libpng-$PNG_VERSION
+    ./configure "$@" --prefix= LDFLAGS="-L$INSTALLDIR/lib" CPPFLAGS="-I$INSTALLDIR/include"
+    make -j LDFLAGS="-L$INSTALLDIR/lib" CPPFLAGS="-I$INSTALLDIR/include"
     make install DESTDIR=$INSTALLDIR
     cd -
 
@@ -569,6 +584,7 @@ case $DEPENDENCY in
         echo "TCL_VERSION         = $TCL_VERSION"
         echo "TK_VERSION          = $TK_VERSION"
         echo "ZLIB_VERSION        = $ZLIB_VERSION"
+        echo "PNG_VERSION         = $PNG_VERSION"
         exit 0;
         ;;
 
@@ -597,7 +613,7 @@ case $DEPENDENCY in
         exit 0;
         ;;
 
-    "blas" | "lapack" | "openblas" | "atlas" | "ant" | "arpack" | "curl" | "eigen" | "fftw" | "hdf5" | "libxml2" | "matio" | "openssl" | "openssh" | "pcre" | "suitesparse" | "tcl" | "tk" | "zlib" | "gluegen" | "jogl" )
+    "blas" | "lapack" | "openblas" | "atlas" | "ant" | "arpack" | "curl" | "eigen" | "fftw" | "hdf5" | "libxml2" | "matio" | "openssl" | "openssh" | "pcre" | "suitesparse" | "tcl" | "tk" | "zlib" | "libpng" | "gluegen" | "jogl" )
         build_$DEPENDENCY
         exit 0;
         ;;
@@ -728,6 +744,10 @@ case $DEPENDENCY in
         rm -f $LIBTHIRDPARTYDIR/redist/libz.*
 	cp -d $INSTALLDIR/lib/libz.* $LIBTHIRDPARTYDIR/redist/
 
+	# CentOS 5 libpng is too old, but libpng should then be in redist
+        rm -f $LIBTHIRDPARTYDIR/libpng*
+        rm -f $LIBTHIRDPARTYDIR/redist/libpng*
+	cp -d $INSTALLDIR/lib/libpng* $LIBTHIRDPARTYDIR/redist/
 
         # Strip libraries (exporting the debuginfo to another file) to
         # reduce file size and thus startup time
