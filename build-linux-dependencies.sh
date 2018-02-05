@@ -700,12 +700,13 @@ do
       LIBTHIRDPARTYDIR=$INSTALLDIR/../lib/thirdparty
 
       # Provide OpenBLAS blas and lapack
+      # ensure that ld.so always load the same "real" file to reduce overhead
       rm -f $LIBTHIRDPARTYDIR/libatlas.*
       rm -f $LIBTHIRDPARTYDIR/lib*blas.*
       rm -f $LIBTHIRDPARTYDIR/liblapack.*
-      cp -d $INSTALLDIR/lib/libopenblas*.so* $LIBTHIRDPARTYDIR/
-      cp -d $INSTALLDIR/lib/libblas.so* $LIBTHIRDPARTYDIR/
-      cp -d $INSTALLDIR/lib/liblapack.so* $LIBTHIRDPARTYDIR/
+      cp -d $INSTALLDIR/lib/libopenblas.so* $LIBTHIRDPARTYDIR/
+      ln -fs libopenblas.so.$OPENBLAS_VERSION $LIBTHIRDPARTYDIR/libblas.so.3
+      ln -fs libopenblas.so.$OPENBLAS_VERSION $LIBTHIRDPARTYDIR/liblapack.so.3
 
       rm -f $LIBTHIRDPARTYDIR/libarpack.*
       cp -d $INSTALLDIR/lib/libarpack.* $LIBTHIRDPARTYDIR/
