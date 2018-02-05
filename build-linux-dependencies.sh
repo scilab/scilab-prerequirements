@@ -3,7 +3,7 @@
 set -e
 set -x
 
-if test $# -ne 1; then
+if test $# -eq 0; then
     echo "This script compiles dependencies of Scilab for Linux."
     echo
     echo "Syntax : $0 <dependency> with dependency equal to:"
@@ -57,6 +57,7 @@ echo
 ################################
 ##### DEPENDENCIES VERSION #####
 ################################
+GCC_VERSION=4.8.2
 LAPACK_VERSION=3.6.0
 ATLAS_VERSION=3.10.2
 OPENBLAS_VERSION=0.2.20
@@ -84,6 +85,7 @@ FOP_VERSION=2.0
 ##### DOWNLOAD #####
 ####################
 function download_dependencies() {
+    [ ! -e gcc-$GCC_VERSION.tgz ] && wget ftp://ftp.lip6.fr/pub/gcc/releases/gcc-$GCC_VERSION/gcc-$GCC_VERSION.tar.gz 
     [ ! -e lapack-$LAPACK_VERSION.tgz ] && wget http://www.netlib.org/lapack/lapack-$LAPACK_VERSION.tgz
     [ ! -e atlas$ATLAS_VERSION.tar.bz2 ] && wget http://downloads.sourceforge.net/project/math-atlas/Stable/$ATLAS_VERSION/atlas$ATLAS_VERSION.tar.bz2
     [ ! -e apache-ant-$ANT_VERSION-bin.tar.gz ] && wget http://archive.apache.org/dist/ant/binaries/apache-ant-$ANT_VERSION-bin.tar.gz
@@ -115,6 +117,32 @@ function download_dependencies() {
 ####################
 ##### BUILDERS #####
 ####################
+
+function build_gcc() {
+	[ -d gcc-$GCC_VERSION ] && rm -fr gcc-$GCC_VERSION
+
+	tar -xzf gcc-$GCC_VERSION.tar.gz
+	cd gcc-$GCC_VERSION
+	./contrib/download_prerequisites
+	mkdir gcc-build
+	cd gcc-build
+	../configure --prefix= --enable-language=c,c++,fortran --disable-multilib
+        make
+
+        # NEEDED FOR CLEAN DEPENDENCIES
+	# enforce fPIC even for static libraries (to relink them to shared objects)
+        rm -f $MACHINE-*-linux-gnu/libquadmath/*.o $MACHINE-*-linux-gnu/libquadmath/*.lo
+        rm -f $MACHINE-*-linux-gnu/libquadmath/*/*.o $MACHINE-*-linux-gnu/libquadmath/*/*.lo
+	make -C $MACHINE-*-linux-gnu/libquadmath/ CFLAGS='-fPIC -fvisibility=hidden' FCFLAGS='-fPIC -fvisibility=hidden'
+
+        rm -f $MACHINE-*-linux-gnu/libgfortran/*.o $MACHINE-*-linux-gnu/libgfortran/*.lo
+	make -C $MACHINE-*-linux-gnu/libgfortran/ CFLAGS='-fPIC -fvisibility=hidden' FCFLAGS='-fPIC -fvisibility=hidden'
+        
+        # only install needed libraries
+        cp -a *-linux-gnu/libquadmath/.libs/libquadmath.a $INSTALLDIR/lib/
+        cp -a *-linux-gnu/libgfortran/.libs/libgfortran.a $INSTALLDIR/lib/
+	cd ../..
+}
 
 function build_lapack() {
     [ -d lapack-$LAPACK_VERSION ] && rm -fr lapack-$LAPACK_VERSION
@@ -190,9 +218,22 @@ function build_openblas() {
     tar -xzf OpenBLAS-$OPENBLAS_VERSION.tar.gz
     cd OpenBLAS-$OPENBLAS_VERSION
     make TARGET=NEHALEM
-    make PREFIX=$INSTALLDIR install
-    cd -
 
+    # Relink to discard libgfortran.so dependency
+    gcc -shared -o $INSTALLDIR/lib/libopenblas.so.$OPENBLAS_VERSION -Wl,-soname,libopenblas.so.0 -Wl,--whole-archive libopenblas_nehalemp-r$OPENBLAS_VERSION.a -Wl,--no-whole-archive $INSTALLDIR/lib/libgfortran.a $INSTALLDIR/lib/libquadmath.a -lm -lpthread
+    ln -fs libopenblas.so.$OPENBLAS_VERSION $INSTALLDIR/lib/libopenblas.so.0
+    ln -fs libopenblas.so.$OPENBLAS_VERSION $INSTALLDIR/lib/libopenblas.so
+    ln -fs libblas.so $INSTALLDIR/lib/libopenblas.so.0
+    ln -fs libopenblas.so.$OPENBLAS_VERSION $INSTALLDIR/lib/libopenblas.so.0
+
+    # BLAS and LAPACK libs
+    # TODO: only export BLAS / LAPACK ABI
+    gcc -shared -o $INSTALLDIR/lib/libblas.so.3 -Wl,-soname,libblas.3 -Wl,--whole-archive libopenblas_nehalemp-r$OPENBLAS_VERSION.a -Wl,--no-whole-archive $INSTALLDIR/lib/libgfortran.a $INSTALLDIR/lib/libquadmath.a -lm -lpthread
+    ln -fs libblas.so.3 $INSTALLDIR/lib/libblas.so
+    gcc -shared -o $INSTALLDIR/lib/liblapack.so.3 -Wl,-soname,liblapack.3 -Wl,--whole-archive libopenblas_nehalemp-r$OPENBLAS_VERSION.a -Wl,--no-whole-archive $INSTALLDIR/lib/libgfortran.a $INSTALLDIR/lib/libquadmath.a -lm -lpthread
+    ln -fs liblapack.so.3 $INSTALLDIR/lib/liblapack.so
+    
+    cd -
     clean_static
 }
 
@@ -212,10 +253,15 @@ function build_arpack() {
     tar -xzf arpack-ng-$ARPACK_VERSION.tar.gz
     cd arpack-ng-$ARPACK_VERSION
     ./configure "$@" --prefix= \
-        --with-blas="-L$INSTALLDIR/lib/ -lblas" \
-        --with-lapack="-L$INSTALLDIR/lib/ -llapack -lblas"
-    make -j
-    make install DESTDIR=$INSTALLDIR
+        --with-blas="$INSTALLDIR/lib/libblas.so" \
+        --with-lapack="$INSTALLDIR/lib/liblapack.so"
+    make
+
+    # Relink to discard libgfortran.so dependency
+    gcc -shared -o $INSTALLDIR/lib/libarpack.so.$ARPACK_VERSION -Wl,--whole-archive .libs/libarpack.a -Wl,--no-whole-archive -Wl,-soname,libarpack.so.3 $INSTALLDIR/lib/libgfortran.a $INSTALLDIR/lib/libquadmath.a $INSTALLDIR/lib/libblas.so.3 $INSTALLDIR/lib/liblapack.so.3 -lm
+    ln -fs libarpack.so.$ARPACK_VERSION $INSTALLDIR/lib/libarpack.so.3
+    ln -fs libarpack.so.$ARPACK_VERSION $INSTALLDIR/lib/libarpack.so
+
     cd -
 
     clean_static
@@ -433,7 +479,7 @@ function build_suitesparse() {
     gcc -shared -Wl,-soname,libamd.so.${AMD_MAJOR_VERSION} -o libamd.so.${AMD_VERSION} `ls *.o`
     rm -f $INSTALLDIR/lib/libamd.so*
     cp libamd.so.${AMD_VERSION} $INSTALLDIR/lib/
-    cd -
+    cd ../..
 
     # libcamd.so
     CAMD_VERSION=$(grep -m1 VERSION CAMD/Makefile | sed -e "s|\VERSION = ||")
@@ -442,7 +488,7 @@ function build_suitesparse() {
     gcc -shared -Wl,-soname,libcamd.so.${CAMD_MAJOR_VERSION} -o libcamd.so.${CAMD_VERSION} `ls *.o`
     rm -f $INSTALLDIR/lib/libcamd.so*
     cp libcamd.so.${CAMD_VERSION} $INSTALLDIR/lib/
-    cd -
+    cd ../..
 
     # libcolamd.so
     COLAMD_VERSION=$(grep -m1 VERSION COLAMD/Makefile | sed -e "s|\VERSION = ||")
@@ -451,7 +497,7 @@ function build_suitesparse() {
     gcc -shared -Wl,-soname,libcolamd.so.${COLAMD_MAJOR_VERSION} -o libcolamd.so.${COLAMD_VERSION} `ls *.o`
     rm -f $INSTALLDIR/lib/libcolamd.so*
     cp libcolamd.so.${COLAMD_VERSION} $INSTALLDIR/lib/
-    cd -
+    cd ../..
 
     # libccolamd.so
     CCOLAMD_VERSION=$(grep -m1 VERSION CCOLAMD/Makefile | sed -e "s|\VERSION = ||")
@@ -460,7 +506,7 @@ function build_suitesparse() {
     gcc -shared -Wl,-soname,libccolamd.so.${CCOLAMD_MAJOR_VERSION} -o libccolamd.so.${CCOLAMD_VERSION} `ls *.o`
     rm -f $INSTALLDIR/lib/libccolamd.so*
     cp libccolamd.so.${CCOLAMD_VERSION} $INSTALLDIR/lib/
-    cd -
+    cd ../..
 
     # libcholmod.so
     CHOLMOD_VERSION=$(grep -m1 VERSION CHOLMOD/Makefile | sed -e "s|\VERSION = ||")
@@ -469,17 +515,20 @@ function build_suitesparse() {
     gcc -shared -Wl,-soname,libcholmod.so.${CHOLMOD_MAJOR_VERSION} -o libcholmod.so.${CHOLMOD_VERSION} `ls *.o`
     rm -f $INSTALLDIR/lib/libcholmod.so*
     cp libcholmod.so.${CHOLMOD_VERSION} $INSTALLDIR/lib/
-    cd -
+    cd ../..
 
     # libumfpack.so
     UMFPACK_VERSION=$(grep -m1 VERSION UMFPACK/Makefile | sed -e "s|\VERSION = ||")
     UMFPACK_MAJOR_VERSION=$(echo "$UMFPACK_VERSION" | awk -F \. {'print $1'})
     cd UMFPACK/Lib
-    gcc -shared -Wl,-soname,libumfpack.so.${UMFPACK_MAJOR_VERSION} -o libumfpack.so.${UMFPACK_VERSION} `ls *.o` $INSTALLDIR/lib/libsuitesparseconfig.a \
-        -L$INSTALLDIR/lib/ -lblas -llapack -lm -lcholmod -lcolamd -lccolamd -lcamd -lrt
+    gcc -shared -Wl,-soname,libumfpack.so.${UMFPACK_MAJOR_VERSION} -o libumfpack.so.${UMFPACK_VERSION} `ls *.o` \
+      $INSTALLDIR/lib/libsuitesparseconfig.a $INSTALLDIR/lib/libgfortran.a $INSTALLDIR/lib/libquadmath.a \
+      $INSTALLDIR/lib/libblas.so.3 $INSTALLDIR/lib/liblapack.so.3 -lm -lrt \
+      $INSTALLDIR/lib/libcholmod.so.${CHOLMOD_VERSION} $INSTALLDIR/lib/libcolamd.so.${COLAMD_VERSION} \
+      $INSTALLDIR/lib/libccolamd.so.${CCOLAMD_VERSION} $INSTALLDIR/lib/libcamd.so.${CAMD_VERSION}
     rm -f $INSTALLDIR/lib/libumfpack.so*
     cp libumfpack.so.${UMFPACK_VERSION} $INSTALLDIR/lib/
-    cd -
+    cd ../..
 
     cd $INSTALLDIR/lib/
     ln -fs libamd.so.${AMD_VERSION} libamd.so
@@ -495,6 +544,7 @@ function build_suitesparse() {
     ln -fs libumfpack.so.${UMFPACK_VERSION} libumfpack.so
     ln -fs libumfpack.so.${UMFPACK_VERSION} libumfpack.so.${UMFPACK_MAJOR_VERSION}
     cd -
+    cd ..
 
     clean_static
 }
@@ -538,7 +588,7 @@ function build_jogl() {
 
 function clean_static() {
         rm -f $INSTALLDIR/lib/*.la # Avoid message about moved library while compiling
-        rm -f $INSTALLDIR/lib/*.a # No more needed
+        find $INSTALLDIR/lib \( -name '*.a' -or -name '*.a.*' \) -a -not \( -name 'libgfortran.a' -o -name 'libquadmath.a'  \) -exec rm {} +
 }
 
 #########################
@@ -561,270 +611,264 @@ export LDFLAGS="-O2 -g"
 ###############################
 ##### ARGUMENT MANAGEMENT #####
 ###############################
-DEPENDENCY=$1
-case $DEPENDENCY in
+while [ $# -gt 0 ]
+do
+  case "$1" in
 
     "versions")
-        echo "BLAS_VERSION        = $BLAS_VERSION"
-        echo "LAPACK_VERSION      = $LAPACK_VERSION"
-        echo "OPENBLAS_VERSION    = $OPENBLAS_VERSION"
-        echo "ATLAS_VERSION       = $ATLAS_VERSION"
-        echo "ANT_VERSION         = $ANT_VERSION"
-        echo "ARPACK_VERSION      = $ARPACK_VERSION"
-        echo "CURL_VERSION        = $CURL_VERSION"
-	echo "EIGEN_VERSION       = $EIGEN_VERSION"
-        echo "FFTW_VERSION        = $FFTW_VERSION"
-        echo "HDF5_VERSION        = $HDF5_VERSION"
-        echo "LIBXML2_VERSION     = $LIBXML2_VERSION"
-        echo "MATIO_VERSION       = $MATIO_VERSION"
-        echo "OCAML_VERSION       = $OCAML_VERSION"
-        echo "OPENSSL_VERSION     = $OPENSSL_VERSION"
-        echo "PCRE_VERSION        = $PCRE_VERSION"
-        echo "SUITESPARSE_VERSION = $SUITESPARSE_VERSION"
-        echo "TCL_VERSION         = $TCL_VERSION"
-        echo "TK_VERSION          = $TK_VERSION"
-        echo "ZLIB_VERSION        = $ZLIB_VERSION"
-        echo "PNG_VERSION         = $PNG_VERSION"
-        exit 0;
-        ;;
+      echo "GCC_VERSION         = $GCC_VERSION"
+      echo "BLAS_VERSION        = $BLAS_VERSION"
+      echo "LAPACK_VERSION      = $LAPACK_VERSION"
+      echo "OPENBLAS_VERSION    = $OPENBLAS_VERSION"
+      echo "ATLAS_VERSION       = $ATLAS_VERSION"
+      echo "ANT_VERSION         = $ANT_VERSION"
+      echo "ARPACK_VERSION      = $ARPACK_VERSION"
+      echo "CURL_VERSION        = $CURL_VERSION"
+      echo "EIGEN_VERSION       = $EIGEN_VERSION"
+      echo "FFTW_VERSION        = $FFTW_VERSION"
+      echo "HDF5_VERSION        = $HDF5_VERSION"
+      echo "LIBXML2_VERSION     = $LIBXML2_VERSION"
+      echo "MATIO_VERSION       = $MATIO_VERSION"
+      echo "OCAML_VERSION       = $OCAML_VERSION"
+      echo "OPENSSL_VERSION     = $OPENSSL_VERSION"
+      echo "PCRE_VERSION        = $PCRE_VERSION"
+      echo "SUITESPARSE_VERSION = $SUITESPARSE_VERSION"
+      echo "TCL_VERSION         = $TCL_VERSION"
+      echo "TK_VERSION          = $TK_VERSION"
+      echo "ZLIB_VERSION        = $ZLIB_VERSION"
+      echo "PNG_VERSION         = $PNG_VERSION"
+      exit 0;
+      ;;
 
     "fromscratch")
-        sh $0 init
-        sh $0 download
-        sh $0 all
-        sh $0 binary
-        exit 0;
-        ;;
+      sh $0 init
+      sh $0 download
+      sh $0 all
+      sh $0 binary
+      exit 0;
+      ;;
 
     "init")
-        rsync -rl --exclude=.svn $DEVTOOLSDIR/java $INSTALLDIR/..
-        if [ "$MACHINE" = "x86_64" ]; then
-            rm -rf $INSTALLDIR/../java/apache-ant $INSTALLDIR/../java/apache-ant-1.7.1
-        fi
-        rsync -rl --exclude=.svn $DEVTOOLSDIR/thirdparty $INSTALLDIR/..
-        rsync -rl --exclude=.svn $DEVTOOLSDIR/modules $INSTALLDIR/..
-        mkdir $INSTALLDIR/../lib/
-        rsync -rl --exclude=.svn $DEVTOOLSDIR/lib/thirdparty $INSTALLDIR/../lib
-        exit 0;
-        ;;
+      rsync -rl --exclude=.svn $DEVTOOLSDIR/java $INSTALLDIR/..
+      if [ "$MACHINE" = "x86_64" ]; then
+        rm -rf $INSTALLDIR/../java/apache-ant $INSTALLDIR/../java/apache-ant-1.7.1
+      fi
+      rsync -rl --exclude=.svn $DEVTOOLSDIR/thirdparty $INSTALLDIR/..
+      rsync -rl --exclude=.svn $DEVTOOLSDIR/modules $INSTALLDIR/..
+      mkdir $INSTALLDIR/../lib/
+      rsync -rl --exclude=.svn $DEVTOOLSDIR/lib/thirdparty $INSTALLDIR/../lib
+      exit 0;
+      ;;
 
     "download")
-        download_dependencies
-        exit 0;
-        ;;
+      download_dependencies
+      shift
+      ;;
 
-    "blas" | "lapack" | "openblas" | "atlas" | "ant" | "arpack" | "curl" | "eigen" | "fftw" | "hdf5" | "libxml2" | "matio" | "openssl" | "openssh" | "pcre" | "suitesparse" | "tcl" | "tk" | "zlib" | "libpng" | "gluegen" | "jogl" )
-        build_$DEPENDENCY
-        exit 0;
-        ;;
+    "gcc" | "blas" | "lapack" | "openblas" | "atlas" | "ant" | "arpack" | "curl" | "eigen" | "fftw" | "hdf5" | "libxml2" | "matio" | "openssl" | "openssh" | "pcre" | "suitesparse" | "tcl" | "tk" | "zlib" | "libpng" | "gluegen" | "jogl" | "ocaml" )
+      build_$1
+      shift
+      ;;
 
     "binary")
-        ########################
-        ##### TCL/TK stuff #####
-        ########################
-        rsync -rl --exclude=.svn $INSTALLDIR/lib/tcl* $INSTALLDIR/../modules/tclsci/tcl
-        rsync -rl --exclude=.svn $INSTALLDIR/lib/tk* $INSTALLDIR/../modules/tclsci/tcl
-        rm $INSTALLDIR/../modules/tclsci/tcl/tclConfig.sh
-        rm $INSTALLDIR/../modules/tclsci/tcl/tkConfig.sh
-        rm -rf $INSTALLDIR/../modules/tclsci/tk8.5/demos/ # See bug #3869
+      ########################
+      ##### TCL/TK stuff #####
+      ########################
+      rsync -rl --exclude=.svn $INSTALLDIR/lib/tcl* $INSTALLDIR/../modules/tclsci/tcl
+      rsync -rl --exclude=.svn $INSTALLDIR/lib/tk* $INSTALLDIR/../modules/tclsci/tcl
+      rm $INSTALLDIR/../modules/tclsci/tcl/tclConfig.sh
+      rm $INSTALLDIR/../modules/tclsci/tcl/tkConfig.sh
+      rm -rf $INSTALLDIR/../modules/tclsci/tk8.5/demos/ # See bug #3869
 
-        #################
-        ##### EIGEN #####
-        #################
-        mkdir -p $INSTALLDIR/../lib/Eigen/include/
-        cp -R $INSTALLDIR/include/Eigen/ $INSTALLDIR/../lib/Eigen/include/
+      #################
+      ##### EIGEN #####
+      #################
+      mkdir -p $INSTALLDIR/../lib/Eigen/include/
+      cp -R $INSTALLDIR/include/Eigen/ $INSTALLDIR/../lib/Eigen/include/
 
-        #####################################
-        ##### lib/thirdparty/ directory #####
-        #####################################
-        if [ "$MACHINE" = "i686" ]; then
-            USRDIR="/usr/lib"
-            LIBDIR="/lib"
-        elif [ "$MACHINE" = "x86_64" ]; then
-            USRDIR="/usr/lib64"
-            LIBDIR="/lib64"
-        fi
+      #####################################
+      ##### lib/thirdparty/ directory #####
+      #####################################
+      if [ "$MACHINE" = "i686" ]; then
+        USRDIR="/usr/lib"
+        LIBDIR="/lib"
+      elif [ "$MACHINE" = "x86_64" ]; then
+        USRDIR="/usr/lib64"
+        LIBDIR="/lib64"
+      fi
 
-        LIBTHIRDPARTYDIR=$INSTALLDIR/../lib/thirdparty
-        
-        # Provide OpenBLAS blas and lapack
-        rm -f $LIBTHIRDPARTYDIR/libatlas.*
-        rm -f $LIBTHIRDPARTYDIR/lib*blas.*
-        rm -f $LIBTHIRDPARTYDIR/liblapack.*
-        cp -d $INSTALLDIR/lib/libopenblas*.so* $LIBTHIRDPARTYDIR/
-        cd $LIBTHIRDPARTYDIR
-        ln -s libopenblas.so libblas.so
-        ln -s libopenblas.so.0 libblas.so.3
-        ln -s libopenblas.so liblapack.so
-        ln -s libopenblas.so.0 liblapack.so.3
-        cd -
+      LIBTHIRDPARTYDIR=$INSTALLDIR/../lib/thirdparty
 
-        rm -f $LIBTHIRDPARTYDIR/libarpack.*
-        cp -d $INSTALLDIR/lib/libarpack.* $LIBTHIRDPARTYDIR/
+      # Provide OpenBLAS blas and lapack
+      rm -f $LIBTHIRDPARTYDIR/libatlas.*
+      rm -f $LIBTHIRDPARTYDIR/lib*blas.*
+      rm -f $LIBTHIRDPARTYDIR/liblapack.*
+      cp -d $INSTALLDIR/lib/libopenblas*.so* $LIBTHIRDPARTYDIR/
+      cp -d $INSTALLDIR/lib/libblas.so* $LIBTHIRDPARTYDIR/
+      cp -d $INSTALLDIR/lib/liblapack.so* $LIBTHIRDPARTYDIR/
 
-        rm -f $LIBTHIRDPARTYDIR/libcrypto.*
-        cp -d $INSTALLDIR/lib/libcrypto.* $LIBTHIRDPARTYDIR/
+      rm -f $LIBTHIRDPARTYDIR/libarpack.*
+      cp -d $INSTALLDIR/lib/libarpack.* $LIBTHIRDPARTYDIR/
 
-        rm -f $LIBTHIRDPARTYDIR/libcurl.*
-        cp -d $INSTALLDIR/lib/libcurl.* $LIBTHIRDPARTYDIR/
+      rm -f $LIBTHIRDPARTYDIR/libcrypto.*
+      cp -d $INSTALLDIR/lib/libcrypto.* $LIBTHIRDPARTYDIR/
 
-        rm -f $LIBTHIRDPARTYDIR/libfftw3.*
-        cp -d $INSTALLDIR/lib/libfftw3.* $LIBTHIRDPARTYDIR/
+      rm -f $LIBTHIRDPARTYDIR/libcurl.*
+      cp -d $INSTALLDIR/lib/libcurl.* $LIBTHIRDPARTYDIR/
 
-        rm -f $LIBTHIRDPARTYDIR/libhdf5_hl.*
-        cp -d $INSTALLDIR/lib/libhdf5_hl.* $LIBTHIRDPARTYDIR/
+      rm -f $LIBTHIRDPARTYDIR/libfftw3.*
+      cp -d $INSTALLDIR/lib/libfftw3.* $LIBTHIRDPARTYDIR/
 
-        rm -f $LIBTHIRDPARTYDIR/libhdf5.*
-        cp -d $INSTALLDIR/lib/libhdf5.* $LIBTHIRDPARTYDIR/
+      rm -f $LIBTHIRDPARTYDIR/libhdf5_hl.*
+      cp -d $INSTALLDIR/lib/libhdf5_hl.* $LIBTHIRDPARTYDIR/
 
-        rm -f $LIBTHIRDPARTYDIR/libmatio.*
-        cp -d $INSTALLDIR/lib/libmatio.* $LIBTHIRDPARTYDIR/
+      rm -f $LIBTHIRDPARTYDIR/libhdf5.*
+      cp -d $INSTALLDIR/lib/libhdf5.* $LIBTHIRDPARTYDIR/
 
-        rm -f $LIBTHIRDPARTYDIR/libpcreposix.*
-        cp -d $INSTALLDIR/lib/libpcreposix.* $LIBTHIRDPARTYDIR/
+      rm -f $LIBTHIRDPARTYDIR/libmatio.*
+      cp -d $INSTALLDIR/lib/libmatio.* $LIBTHIRDPARTYDIR/
 
-        rm -f $LIBTHIRDPARTYDIR/libpcre.*
-        cp -d $INSTALLDIR/lib/libpcre.* $LIBTHIRDPARTYDIR/
+      rm -f $LIBTHIRDPARTYDIR/libpcreposix.*
+      cp -d $INSTALLDIR/lib/libpcreposix.* $LIBTHIRDPARTYDIR/
 
-        rm -f $LIBTHIRDPARTYDIR/libssl.*
-        cp -d $INSTALLDIR/lib/libssl.* $LIBTHIRDPARTYDIR/
+      rm -f $LIBTHIRDPARTYDIR/libpcre.*
+      cp -d $INSTALLDIR/lib/libpcre.* $LIBTHIRDPARTYDIR/
 
-        rm -f $LIBTHIRDPARTYDIR/libtcl*.*
-        cp -d $INSTALLDIR/lib/libtcl*.* $LIBTHIRDPARTYDIR/
+      rm -f $LIBTHIRDPARTYDIR/libssl.*
+      cp -d $INSTALLDIR/lib/libssl.* $LIBTHIRDPARTYDIR/
 
-        rm -f $LIBTHIRDPARTYDIR/libtk*.*
-        cp -d $INSTALLDIR/lib/libtk*.* $LIBTHIRDPARTYDIR/
+      rm -f $LIBTHIRDPARTYDIR/libtcl*.*
+      cp -d $INSTALLDIR/lib/libtcl*.* $LIBTHIRDPARTYDIR/
 
-        rm -f $LIBTHIRDPARTYDIR/libumfpack.*
-        cp -d $INSTALLDIR/lib/libumfpack.* $LIBTHIRDPARTYDIR/
-        rm -f $LIBTHIRDPARTYDIR/libamd.*
-        cp -d $INSTALLDIR/lib/libamd.* $LIBTHIRDPARTYDIR/
-        rm -f $LIBTHIRDPARTYDIR/libcholmod.*
-        cp -d $INSTALLDIR/lib/libcholmod.* $LIBTHIRDPARTYDIR/
-        rm -f $LIBTHIRDPARTYDIR/libcolamd.*
-        cp -d $INSTALLDIR/lib/libcolamd.* $LIBTHIRDPARTYDIR/
-        rm -f $LIBTHIRDPARTYDIR/libccolamd.*
-        cp -d $INSTALLDIR/lib/libccolamd.* $LIBTHIRDPARTYDIR/
-        rm -f $LIBTHIRDPARTYDIR/libcamd.*
-        cp -d $INSTALLDIR/lib/libcamd.* $LIBTHIRDPARTYDIR/
+      rm -f $LIBTHIRDPARTYDIR/libtk*.*
+      cp -d $INSTALLDIR/lib/libtk*.* $LIBTHIRDPARTYDIR/
 
-        rm -f $LIBTHIRDPARTYDIR/libxml2.*
-        cp -d $INSTALLDIR/lib/libxml2.* $LIBTHIRDPARTYDIR/
+      rm -f $LIBTHIRDPARTYDIR/libumfpack.*
+      cp -d $INSTALLDIR/lib/libumfpack.* $LIBTHIRDPARTYDIR/
+      rm -f $LIBTHIRDPARTYDIR/libamd.*
+      cp -d $INSTALLDIR/lib/libamd.* $LIBTHIRDPARTYDIR/
+      rm -f $LIBTHIRDPARTYDIR/libcholmod.*
+      cp -d $INSTALLDIR/lib/libcholmod.* $LIBTHIRDPARTYDIR/
+      rm -f $LIBTHIRDPARTYDIR/libcolamd.*
+      cp -d $INSTALLDIR/lib/libcolamd.* $LIBTHIRDPARTYDIR/
+      rm -f $LIBTHIRDPARTYDIR/libccolamd.*
+      cp -d $INSTALLDIR/lib/libccolamd.* $LIBTHIRDPARTYDIR/
+      rm -f $LIBTHIRDPARTYDIR/libcamd.*
+      cp -d $INSTALLDIR/lib/libcamd.* $LIBTHIRDPARTYDIR/
 
 
-        # In case these libraries are not found on the system.
-        #
-        # The ".so" is not shipped on purpose for compilers support libraries,
-        # the user should build on the reference system.
-        # The mandatory libraries are the ones documented in the Linux Standard
-        # Base 5.0 .
-        [ ! -d $LIBTHIRDPARTYDIR/redist ] && mkdir $LIBTHIRDPARTYDIR/redist/
-        # libgfortran.so.1 libgfortran.so.3
-        rm -rf $LIBTHIRDPARTYDIR/libquadmath.*
-        rm -f $LIBTHIRDPARTYDIR/libgfortran.*
-        rm -f $LIBTHIRDPARTYDIR/redist/libquadmath.*
-        rm -f $LIBTHIRDPARTYDIR/redist/libgfortran.*
-        cp -d $USRDIR/libgfortran.so.1* $LIBTHIRDPARTYDIR/redist/
-        cp -d $USRDIR/libgfortran.so.3* $LIBTHIRDPARTYDIR/redist/
-        # libgomp.1.0
-        rm -f $LIBTHIRDPARTYDIR/libgomp.*
-        rm -f $LIBTHIRDPARTYDIR/redist/libgomp.*
-        cp -d $USRDIR/libgomp.so.1.0.0 $LIBTHIRDPARTYDIR/redist/
-        ln -s libgomp.so.1.0.0 $LIBTHIRDPARTYDIR/redist/libgomp.so.1.0
-        ln -s libgomp.so.1.0.0 $LIBTHIRDPARTYDIR/redist/libgomp.so.1
-        # libncurses.so.5
-        rm -f $LIBTHIRDPARTYDIR/libncurses.*
-        rm -f $LIBTHIRDPARTYDIR/redist/libncurses.*
-        cp -d $USRDIR/libncurses.so.5.5 $LIBTHIRDPARTYDIR/redist/
-        ln -s libncurses.so.5.5 $LIBTHIRDPARTYDIR/redist/libncurses.so.5
-        ln -s libncurses.so.5.5 $LIBTHIRDPARTYDIR/redist/libncurses.so
+      # Scilab dependencies where the system ones are not recent enough to be used.
+      #
+      # The system dependencies are supposed to be conformant to the latest 
+      # Linux Standard Base 5.0.0 ; Scilab requires more recent versions.
 
-	# CentOS 5 libz is too old, but libz should then be in redist
-        rm -f $LIBTHIRDPARTYDIR/libz.*
-        rm -f $LIBTHIRDPARTYDIR/redist/libz.*
-	cp -d $INSTALLDIR/lib/libz.* $LIBTHIRDPARTYDIR/redist/
+      rm -fr $LIBTHIRDPARTYDIR/redist && mkdir $LIBTHIRDPARTYDIR/redist/
 
-	# CentOS 5 libpng is too old, but libpng should then be in redist
-        rm -f $LIBTHIRDPARTYDIR/libpng*
-        rm -f $LIBTHIRDPARTYDIR/redist/libpng*
-	cp -d $INSTALLDIR/lib/libpng* $LIBTHIRDPARTYDIR/redist/
+      rm -f $LIBTHIRDPARTYDIR/libz.*
+      rm -f $LIBTHIRDPARTYDIR/redist/libz.*
+      cp -d $INSTALLDIR/lib/libz.* $LIBTHIRDPARTYDIR/redist/
 
-        # Strip libraries (exporting the debuginfo to another file) to
-        # reduce file size and thus startup time
-        find $LIBTHIRDPARTYDIR -name '*.so*' -type f | while read file ;
-        do
-	    [[ $file == *.debug ]] && continue
-            objcopy --only-keep-debug $file $file.debug
-            objcopy --strip-debug $file
-            objcopy --add-gnu-debuglink=$file.debug $file
-        done
+      rm -f $LIBTHIRDPARTYDIR/libpng*
+      rm -f $LIBTHIRDPARTYDIR/redist/libpng*
+      cp -d $INSTALLDIR/lib/libpng* $LIBTHIRDPARTYDIR/redist/
 
-        exit 0;
-        ;;
+      rm -f $LIBTHIRDPARTYDIR/libxml2.*
+      cp -d $INSTALLDIR/lib/libxml2.* $LIBTHIRDPARTYDIR/redist/
 
-    "jar")
-        # JAR management
-        # we usually do not need to recompile JARs and we also re-use major jar 
-        # dependencies (shipped into the binary zip)
+      # GCC libs could be there but are static linked into scilab libraries 
+      # instead.
+      # This avoid compilers (and support libraries) version mismatch between 
+      # gcc used here and user's gcc (probably more recent)
 
-        JAVATHIRDPARTYDIR=$INSTALLDIR/../thirdparty
+      # In case these libraries are not found on the system.
+      #
+      # The ".so" is not shipped on purpose for compilers support libraries,
+      # the user should build on the reference system.
+      # The mandatory libraries are the ones documented in the Linux Standard
+      # Base 5.0 .
 
-        # XMLGraphics (included in FOP)
-        # Batik (included in FOP)
-        # FOP
-        rm -f $JAVATHIRDPARTYDIR/fop-*
-        rm -fr fop-$FOP_VERSION
-        unzip fop-$FOP_VERSION-bin.zip fop-$FOP_VERSION/build/*.jar fop-$FOP_VERSION/lib/*.jar
-        rm -f $JAVATHIRDPARTYDIR/fop*
-        cp -a fop-$FOP_VERSION/build/fop.jar $JAVATHIRDPARTYDIR/
-        rm -f $JAVATHIRDPARTYDIR/avalon-framework*
-        cp -a fop-$FOP_VERSION/lib/avalon-framework-*.jar $JAVATHIRDPARTYDIR/avalon-framework.jar
-        rm -f $JAVATHIRDPARTYDIR/batik-*
-        cp -a fop-$FOP_VERSION/lib/batik-all-*.jar $JAVATHIRDPARTYDIR/batik-all.jar
-        rm -f $JAVATHIRDPARTYDIR/commons-io-*
-        cp -a fop-$FOP_VERSION/lib/commons-io-*.jar $JAVATHIRDPARTYDIR/commons-io.jar
-        rm -f $JAVATHIRDPARTYDIR/commons-logging-*
-        cp -a fop-$FOP_VERSION/lib/commons-logging-*.jar $JAVATHIRDPARTYDIR/commons-logging.jar
-        rm -f $JAVATHIRDPARTYDIR/fontbox-*
-        cp -a fop-$FOP_VERSION/lib/fontbox-*.jar $JAVATHIRDPARTYDIR/fontbox.jar
-        rm -f $JAVATHIRDPARTYDIR/xml-apis-ext-*
-        cp -a fop-$FOP_VERSION/lib/xml-apis-ext*.jar $JAVATHIRDPARTYDIR/xml-apis-ext.jar
-        rm -f $JAVATHIRDPARTYDIR/xml-apis-1*
-        cp -a fop-$FOP_VERSION/lib/xml-apis-1*.jar $JAVATHIRDPARTYDIR/xml-apis.jar
-        rm -f $JAVATHIRDPARTYDIR/xmlgraphics-commons*
-        cp -a fop-$FOP_VERSION/lib/xmlgraphics-commons-*.jar $JAVATHIRDPARTYDIR/xmlgraphics-commons.jar
+      # libncurses.so.5
+      rm -f $LIBTHIRDPARTYDIR/libncurses.*
+      rm -f $LIBTHIRDPARTYDIR/redist/libncurses.*
+      cp -d $USRDIR/libncurses.so.5.5 $LIBTHIRDPARTYDIR/redist/
+      ln -fs libncurses.so.5.5 $LIBTHIRDPARTYDIR/redist/libncurses.so.5
+      ln -fs libncurses.so.5.5 $LIBTHIRDPARTYDIR/redist/libncurses.so
 
-        exit 0;
-        ;;
 
-    "all")
-        build_lapack
-        build_ant
-        build_eigen
-        build_zlib
-        build_hdf5
-        build_pcre
-        build_fftw
-        build_libxml2
-        build_arpack
-        build_suitesparse
-        build_tcl
-        build_tk
-        build_matio
-        build_openssl
-        build_openssh
-        build_curl
+      # Strip libraries (exporting the debuginfo to another file) to
+      # reduce file size and thus startup time
+      find $LIBTHIRDPARTYDIR -name '*.so*' -type f | while read file ;
+      do
+        [[ $file == *.debug ]] && continue
+        objcopy --only-keep-debug $file $file.debug
+        objcopy --strip-debug $file
+        objcopy --add-gnu-debuglink=$file.debug $file
+      done
 
-        exit 0;
-        ;;
+      shift
+      ;;
 
-        "ocaml")
-        build_ocaml
+  "jar")
+    # JAR management
+    # we usually do not need to recompile JARs and we also re-use major jar 
+    # dependencies (shipped into the binary zip)
 
-        exit 0;
-        ;;
-    *)
-        echo "Unknown dependency name $DEPENDENCY"
-        exit 42
-        ;;
-esac;
+    JAVATHIRDPARTYDIR=$INSTALLDIR/../thirdparty
+
+    # XMLGraphics (included in FOP)
+    # Batik (included in FOP)
+    # FOP
+    rm -f $JAVATHIRDPARTYDIR/fop-*
+    rm -fr fop-$FOP_VERSION
+    unzip fop-$FOP_VERSION-bin.zip fop-$FOP_VERSION/build/*.jar fop-$FOP_VERSION/lib/*.jar
+    rm -f $JAVATHIRDPARTYDIR/fop*
+    cp -a fop-$FOP_VERSION/build/fop.jar $JAVATHIRDPARTYDIR/
+    rm -f $JAVATHIRDPARTYDIR/avalon-framework*
+    cp -a fop-$FOP_VERSION/lib/avalon-framework-*.jar $JAVATHIRDPARTYDIR/avalon-framework.jar
+    rm -f $JAVATHIRDPARTYDIR/batik-*
+    cp -a fop-$FOP_VERSION/lib/batik-all-*.jar $JAVATHIRDPARTYDIR/batik-all.jar
+    rm -f $JAVATHIRDPARTYDIR/commons-io-*
+    cp -a fop-$FOP_VERSION/lib/commons-io-*.jar $JAVATHIRDPARTYDIR/commons-io.jar
+    rm -f $JAVATHIRDPARTYDIR/commons-logging-*
+    cp -a fop-$FOP_VERSION/lib/commons-logging-*.jar $JAVATHIRDPARTYDIR/commons-logging.jar
+    rm -f $JAVATHIRDPARTYDIR/fontbox-*
+    cp -a fop-$FOP_VERSION/lib/fontbox-*.jar $JAVATHIRDPARTYDIR/fontbox.jar
+    rm -f $JAVATHIRDPARTYDIR/xml-apis-ext-*
+    cp -a fop-$FOP_VERSION/lib/xml-apis-ext*.jar $JAVATHIRDPARTYDIR/xml-apis-ext.jar
+    rm -f $JAVATHIRDPARTYDIR/xml-apis-1*
+    cp -a fop-$FOP_VERSION/lib/xml-apis-1*.jar $JAVATHIRDPARTYDIR/xml-apis.jar
+    rm -f $JAVATHIRDPARTYDIR/xmlgraphics-commons*
+    cp -a fop-$FOP_VERSION/lib/xmlgraphics-commons-*.jar $JAVATHIRDPARTYDIR/xmlgraphics-commons.jar
+
+    exit 0;
+    ;;
+
+  "all")
+    build_gcc
+    build_openblas
+    build_ant
+    build_eigen
+    build_zlib
+    build_hdf5
+    build_pcre
+    build_fftw
+    build_libxml2
+    build_arpack
+    build_suitesparse
+    build_tcl
+    build_tk
+    build_matio
+    build_openssl
+    build_openssh
+    build_curl
+
+    exit 0;
+    ;;
+
+  *)
+    echo "Unknown dependency name $DEPENDENCY"
+    exit 42
+    ;;
+esac
+done
+
