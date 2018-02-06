@@ -228,9 +228,9 @@ function build_openblas() {
 
     # BLAS and LAPACK libs
     # TODO: only export BLAS / LAPACK ABI
-    gcc -shared -o $INSTALLDIR/lib/libblas.so.3 -Wl,-soname,libblas.3 -Wl,--whole-archive libopenblas_nehalemp-r$OPENBLAS_VERSION.a -Wl,--no-whole-archive $INSTALLDIR/lib/libgfortran.a $INSTALLDIR/lib/libquadmath.a -lm -lpthread
+    gcc -shared -o $INSTALLDIR/lib/libblas.so.3 -Wl,-soname,libblas.so.3 -Wl,--whole-archive libopenblas_nehalemp-r$OPENBLAS_VERSION.a -Wl,--no-whole-archive $INSTALLDIR/lib/libgfortran.a $INSTALLDIR/lib/libquadmath.a -lm -lpthread
     ln -fs libblas.so.3 $INSTALLDIR/lib/libblas.so
-    gcc -shared -o $INSTALLDIR/lib/liblapack.so.3 -Wl,-soname,liblapack.3 -Wl,--whole-archive libopenblas_nehalemp-r$OPENBLAS_VERSION.a -Wl,--no-whole-archive $INSTALLDIR/lib/libgfortran.a $INSTALLDIR/lib/libquadmath.a -lm -lpthread
+    gcc -shared -o $INSTALLDIR/lib/liblapack.so.3 -Wl,-soname,liblapack.so.3 -Wl,--whole-archive libopenblas_nehalemp-r$OPENBLAS_VERSION.a -Wl,--no-whole-archive $INSTALLDIR/lib/libgfortran.a $INSTALLDIR/lib/libquadmath.a -lm -lpthread
     ln -fs liblapack.so.3 $INSTALLDIR/lib/liblapack.so
     
     cd -
