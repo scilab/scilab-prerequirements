@@ -88,7 +88,6 @@ FOP_VERSION=2.0
 ####################
 function download_dependencies() {
     [ ! -e gcc-$GCC_VERSION.tgz ] && curl -o gcc-$GCC_VERSION.tar.gz  ftp://ftp.lip6.fr/pub/gcc/releases/gcc-$GCC_VERSION/gcc-$GCC_VERSION.tar.gz 
-    [ ! -e atlas$ATLAS_VERSION.tar.bz2 ] && curl -o atlas$ATLAS_VERSION.tar.bz2 http://downloads.sourceforge.net/project/math-atlas/Stable/$ATLAS_VERSION/atlas$ATLAS_VERSION.tar.bz2
     [ ! -e apache-ant-$ANT_VERSION-bin.tar.gz ] && curl -o apache-ant-$ANT_VERSION-bin.tar.gz http://archive.apache.org/dist/ant/binaries/apache-ant-$ANT_VERSION-bin.tar.gz
     [ ! -e OpenBLAS-$OPENBLAS_VERSION.tar.gz ] && curl -o OpenBLAS-$OPENBLAS_VERSION.tar.gz https://github.com/xianyi/OpenBLAS/archive/v$OPENBLAS_VERSION.tar.gz
     [ ! -e arpack-ng-$ARPACK_VERSION.tar.gz ] && curl -o arpack-ng-$ARPACK_VERSION.tar.gz https://github.com/opencollab/arpack-ng/archive/$ARPACK_VERSION.tar.gz
@@ -143,57 +142,6 @@ function build_gcc() {
         cp -a *-linux-gnu/libquadmath/.libs/libquadmath.a $INSTALLDIR/lib/
         cp -a *-linux-gnu/libgfortran/.libs/libgfortran.a $INSTALLDIR/lib/
 	cd ../..
-}
-
-function build_atlas() {
-    [ -d ATLAS ] && rm -fr ATLAS/
-    
-    tar -xjf atlas$ATLAS_VERSION.tar.bz2
-    patch -p0 <<EOF
---- ATLAS/CONFIG/src/config.c
-+++ ATLAS/CONFIG/src/config.c
-@@ -688,6 +688,8 @@ int ProbeNcpu(int verb, char *targarg, e
- 
- int ProbePtrbits(int verb, char *targarg, enum OSTYPE OS, enum ASMDIA asmb)
- {
-+   return sizeof(void*) * 8; /* building on a chroot might not detect the right arch */
-+                             /* inline it there */
-    int i, iret;
-    char *ln;
- 
-@@ -711,6 +713,8 @@ int ProbePtrbits(int verb, char *targarg
- 
- int ProbeCPUThrottle(int verb, char *targarg, enum OSTYPE OS, enum ASMDIA asmb)
- {
-+   return 0; /* impossible to turn off cpu throttling => ignore */
-+             /* this undermines performance of compiled library */
-    int i, iret;
-    char *ln;
-    i = strlen(targarg) + 22 + 12;
-
-EOF
-
-    mkdir ATLAS/build
-    cd ATLAS/build
-    # target an SSE2 - 4 cores machine
-    TARGET_MACHINE='-t 4'
-    ../configure --shared $TARGET_MACHINE --with-netlib-lapack-tarfile=../../lapack-$LAPACK_VERSION.tgz
-    make
-    # rebuild a clean shared object for BLAS and LAPACK only
-    ld $LDFLAGS -shared -o lib/libatlas.so.$ATLAS_VERSION --whole-archive lib/libptlapack.a lib/libptf77blas.a --no-whole-archive lib/libptcblas.a lib/libatlas.a -L/opt/rh/devtoolset-2/root/usr/lib/gcc/x86_64-redhat-linux/4.8.2 -lgfortran  -lc -lpthread -lm -lgcc
-    cd -
-
-    # atlas
-    rm -f $INSTALLDIR/lib/lib*atlas* $INSTALLDIR/lib/lib*blas* $INSTALLDIR/lib/lib*lapack*
-    cp -a ATLAS/build/lib/libatlas.so.$ATLAS_VERSION $INSTALLDIR/lib/libatlas.so.$ATLAS_VERSION
-    ln -fs libatlas.so.$ATLAS_VERSION $INSTALLDIR/lib/libatlas.so.3
-    ln -fs libatlas.so.$ATLAS_VERSION $INSTALLDIR/lib/libatlas.so
-    # blas (as libblas)
-    ln -fs libatlas.so.$ATLAS_VERSION $INSTALLDIR/lib/libblas.so.3
-    ln -fs libatlas.so.$ATLAS_VERSION $INSTALLDIR/lib/libblas.so
-    # lapack
-    ln -fs libatlas.so.$ATLAS_VERSION $INSTALLDIR/lib/liblapack.so.3
-    ln -fs libatlas.so.$ATLAS_VERSION $INSTALLDIR/lib/liblapack.so
 }
 
 function build_openblas() {
@@ -649,7 +597,7 @@ do
       shift
       ;;
 
-    "gcc" | "blas" | "lapack" | "openblas" | "atlas" | "ant" | "arpack" | "curl" | "eigen" | "fftw" | "hdf5" | "libxml2" | "matio" | "openssl" | "openssh" | "pcre" | "suitesparse" | "tcl" | "tk" | "zlib" | "libpng" | "gluegen" | "jogl" | "ocaml" )
+    "gcc" | "openblas" | "ant" | "arpack" | "curl" | "eigen" | "fftw" | "hdf5" | "libxml2" | "matio" | "openssl" | "openssh" | "pcre" | "suitesparse" | "tcl" | "tk" | "zlib" | "libpng" | "gluegen" | "jogl" | "ocaml" )
       build_$1
       shift
       ;;
