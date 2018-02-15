@@ -88,7 +88,6 @@ FOP_VERSION=2.0
 ####################
 function download_dependencies() {
     [ ! -e gcc-$GCC_VERSION.tgz ] && curl -o gcc-$GCC_VERSION.tar.gz  ftp://ftp.lip6.fr/pub/gcc/releases/gcc-$GCC_VERSION/gcc-$GCC_VERSION.tar.gz 
-    [ ! -e lapack-$LAPACK_VERSION.tgz ] && curl -o lapack-$LAPACK_VERSION.tgz http://www.netlib.org/lapack/lapack-$LAPACK_VERSION.tgz
     [ ! -e atlas$ATLAS_VERSION.tar.bz2 ] && curl -o atlas$ATLAS_VERSION.tar.bz2 http://downloads.sourceforge.net/project/math-atlas/Stable/$ATLAS_VERSION/atlas$ATLAS_VERSION.tar.bz2
     [ ! -e apache-ant-$ANT_VERSION-bin.tar.gz ] && curl -o apache-ant-$ANT_VERSION-bin.tar.gz http://archive.apache.org/dist/ant/binaries/apache-ant-$ANT_VERSION-bin.tar.gz
     [ ! -e OpenBLAS-$OPENBLAS_VERSION.tar.gz ] && curl -o OpenBLAS-$OPENBLAS_VERSION.tar.gz https://github.com/xianyi/OpenBLAS/archive/v$OPENBLAS_VERSION.tar.gz
@@ -144,23 +143,6 @@ function build_gcc() {
         cp -a *-linux-gnu/libquadmath/.libs/libquadmath.a $INSTALLDIR/lib/
         cp -a *-linux-gnu/libgfortran/.libs/libgfortran.a $INSTALLDIR/lib/
 	cd ../..
-}
-
-function build_lapack() {
-    [ -d lapack-$LAPACK_VERSION ] && rm -fr lapack-$LAPACK_VERSION
-
-    tar -xzf lapack-$LAPACK_VERSION.tgz
-    mkdir lapack-$LAPACK_VERSION/BUILD
-    cd lapack-$LAPACK_VERSION/BUILD
-    cmake28 .. \
-        -DBUILD_DEPRECATED:BOOL=ON \
-        -DCMAKE_Fortran_COMPILER_NAMES=gfortran -DBUILD_SHARED_LIBS:BOOL=ON -DCMAKE_SKIP_RPATH:BOOL=ON \
-        -DCMAKE_SHARED_LINKER_FLAGS='-Wl,--no-undefined'
-    make blas lapack
-    cd -
-
-    rm -f $INSTALLDIR/lib/lib*atlas* $INSTALLDIR/lib/lib*blas* $INSTALLDIR/lib/lib*lapack*
-    cp -a -t $INSTALLDIR/lib/ lapack-$LAPACK_VERSION/BUILD/lib/lib*.so*
 }
 
 function build_atlas() {
