@@ -34,6 +34,8 @@ if [ "$KERNEL" = "Linux" ]; then
         echo "Unknown machine $MACHINE"
         exit
     fi
+elif [ "$KERNEL" = "Darwin" ]; then
+    SPECIFICDIR="macosx"
 else
     echo "Unknown kernel $KERNEL"
     exit
