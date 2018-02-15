@@ -87,31 +87,31 @@ FOP_VERSION=2.0
 ##### DOWNLOAD #####
 ####################
 function download_dependencies() {
-    [ ! -e gcc-$GCC_VERSION.tar.gz ] && curl -o gcc-$GCC_VERSION.tar.gz  ftp://ftp.lip6.fr/pub/gcc/releases/gcc-$GCC_VERSION/gcc-$GCC_VERSION.tar.gz 
-    [ ! -e apache-ant-$ANT_VERSION-bin.tar.gz ] && curl -o apache-ant-$ANT_VERSION-bin.tar.gz http://archive.apache.org/dist/ant/binaries/apache-ant-$ANT_VERSION-bin.tar.gz
-    [ ! -e OpenBLAS-$OPENBLAS_VERSION.tar.gz ] && curl -o OpenBLAS-$OPENBLAS_VERSION.tar.gz https://github.com/xianyi/OpenBLAS/archive/v$OPENBLAS_VERSION.tar.gz
-    [ ! -e arpack-ng-$ARPACK_VERSION.tar.gz ] && curl -o arpack-ng-$ARPACK_VERSION.tar.gz https://github.com/opencollab/arpack-ng/archive/$ARPACK_VERSION.tar.gz
-    [ ! -e curl-$CURL_VERSION.tar.gz ] && curl -o curl-$CURL_VERSION.tar.gz http://curl.haxx.se/download/curl-$CURL_VERSION.tar.gz
-    [ ! -e eigen-$EIGEN_VERSION.tar.gz ] && curl -o eigen-$EIGEN_VERSION.tar.gz
-    [ ! -e fftw-$FFTW_VERSION.tar.gz ] && curl -o fftw-$FFTW_VERSION.tar.gz http://www.fftw.org/fftw-$FFTW_VERSION.tar.gz
-    [ ! -e hdf5-$HDF5_VERSION.tar.gz ] && curl -o hdf5-$HDF5_VERSION.tar.gz http://www.hdfgroup.org/ftp/HDF5/releases/hdf5-$HDF5_VERSION/src/hdf5-$HDF5_VERSION.tar.gz
-    [ ! -e libxml2-$LIBXML2_VERSION.tar.gz ] && curl -o libxml2-$LIBXML2_VERSION.tar.gz http://xmlsoft.org/sources/libxml2-$LIBXML2_VERSION.tar.gz
-    [ ! -e matio-$MATIO_VERSION.tar.gz ] && curl -o matio-$MATIO_VERSION.tar.gz http://downloads.sourceforge.net/project/matio/matio/$MATIO_VERSION/matio-$MATIO_VERSION.tar.gz
-    [ ! -e ocaml-$OCAML_VERSION.tar.gz ] && curl -o ocaml-$OCAML_VERSION.tar.gz http://caml.inria.fr/pub/distrib/ocaml-4.01/ocaml-$OCAML_VERSION.tar.gz
-    [ ! -e openssl-$OPENSSL_VERSION.tar.gz ] && curl -o openssl-$OPENSSL_VERSION.tar.gz http://www.openssl.org/source/openssl-$OPENSSL_VERSION.tar.gz
-    [ ! -e openssh-$OPENSSH_VERSION.tar.gz ] && curl -o openssh-$OPENSSH_VERSION.tar.gz https://mirrors.ircam.fr/pub/OpenBSD/OpenSSH/portable/openssh-$OPENSSH_VERSION.tar.gz
-    [ ! -e SuiteSparse-$SUITESPARSE_VERSION.tar.gz ] && curl -o SuiteSparse-$SUITESPARSE_VERSION.tar.gz http://faculty.cse.tamu.edu/davis/SuiteSparse/SuiteSparse-$SUITESPARSE_VERSION.tar.gz
-    [ ! -e pcre-$PCRE_VERSION.tar.gz ] && curl -o pcre-$PCRE_VERSION.tar.gz https://ftp.pcre.org/pub/pcre/pcre-$PCRE_VERSION.tar.gz
-    [ ! -e tcl$TCL_VERSION-src.tar.gz ] && curl -o tcl$TCL_VERSION-src.tar.gz http://prdownloads.sourceforge.net/tcl/tcl$TCL_VERSION-src.tar.gz
-    [ ! -e tk$TK_VERSION-src.tar.gz ] && curl -o tk$TK_VERSION-src.tar.gz http://prdownloads.sourceforge.net/tcl/tk$TK_VERSION-src.tar.gz
-    [ ! -e zlib-$ZLIB_VERSION.tar.gz ] && curl -o zlib-$ZLIB_VERSION.tar.gz http://downloads.sourceforge.net/project/libpng/zlib/$ZLIB_VERSION/zlib-$ZLIB_VERSION.tar.gz
-    [ ! -e libpng-$PNG_VERSION.tar.gz ] && curl -o libpng-$PNG_VERSION.tar.gz http://prdownloads.sourceforge.net/libpng/libpng-$PNG_VERSION.tar.gz
-    [ ! -e gluegen-v$JOGL_VERSION.tar.7z ] && curl -o gluegen-v$JOGL_VERSION.tar.7z https://jogamp.org/deployment/archive/rc/v$JOGL_VERSION/archive/Sources/gluegen-v$JOGL_VERSION.tar.7z
-    [ ! -e jogl-v$JOGL_VERSION.tar.7z ] && curl -o jogl-v$JOGL_VERSION.tar.7z https://jogamp.org/deployment/archive/rc/v$JOGL_VERSION/archive/Sources/jogl-v$JOGL_VERSION.tar.7z
+    [ ! -e gcc-$GCC_VERSION.tar.gz ] && curl -L -o gcc-$GCC_VERSION.tar.gz  ftp://ftp.lip6.fr/pub/gcc/releases/gcc-$GCC_VERSION/gcc-$GCC_VERSION.tar.gz 
+    [ ! -e apache-ant-$ANT_VERSION-bin.tar.gz ] && curl -L -o apache-ant-$ANT_VERSION-bin.tar.gz http://archive.apache.org/dist/ant/binaries/apache-ant-$ANT_VERSION-bin.tar.gz
+    [ ! -e OpenBLAS-$OPENBLAS_VERSION.tar.gz ] && curl -L -o OpenBLAS-$OPENBLAS_VERSION.tar.gz https://github.com/xianyi/OpenBLAS/archive/v$OPENBLAS_VERSION.tar.gz
+    [ ! -e arpack-ng-$ARPACK_VERSION.tar.gz ] && curl -L -o arpack-ng-$ARPACK_VERSION.tar.gz https://github.com/opencollab/arpack-ng/archive/$ARPACK_VERSION.tar.gz
+    [ ! -e curl-$CURL_VERSION.tar.gz ] && curl -L -o curl-$CURL_VERSION.tar.gz http://curl.haxx.se/download/curl-$CURL_VERSION.tar.gz
+    [ ! -e eigen-$EIGEN_VERSION.tar.gz ] && curl -L -o eigen-$EIGEN_VERSION.tar.gz
+    [ ! -e fftw-$FFTW_VERSION.tar.gz ] && curl -L -o fftw-$FFTW_VERSION.tar.gz http://www.fftw.org/fftw-$FFTW_VERSION.tar.gz
+    [ ! -e hdf5-$HDF5_VERSION.tar.gz ] && curl -L -o hdf5-$HDF5_VERSION.tar.gz http://www.hdfgroup.org/ftp/HDF5/releases/hdf5-$HDF5_VERSION/src/hdf5-$HDF5_VERSION.tar.gz
+    [ ! -e libxml2-$LIBXML2_VERSION.tar.gz ] && curl -L -o libxml2-$LIBXML2_VERSION.tar.gz http://xmlsoft.org/sources/libxml2-$LIBXML2_VERSION.tar.gz
+    [ ! -e matio-$MATIO_VERSION.tar.gz ] && curl -L -o matio-$MATIO_VERSION.tar.gz http://downloads.sourceforge.net/project/matio/matio/$MATIO_VERSION/matio-$MATIO_VERSION.tar.gz
+    [ ! -e ocaml-$OCAML_VERSION.tar.gz ] && curl -L -o ocaml-$OCAML_VERSION.tar.gz http://caml.inria.fr/pub/distrib/ocaml-4.01/ocaml-$OCAML_VERSION.tar.gz
+    [ ! -e openssl-$OPENSSL_VERSION.tar.gz ] && curl -L -o openssl-$OPENSSL_VERSION.tar.gz http://www.openssl.org/source/openssl-$OPENSSL_VERSION.tar.gz
+    [ ! -e openssh-$OPENSSH_VERSION.tar.gz ] && curl -L -o openssh-$OPENSSH_VERSION.tar.gz https://mirrors.ircam.fr/pub/OpenBSD/OpenSSH/portable/openssh-$OPENSSH_VERSION.tar.gz
+    [ ! -e SuiteSparse-$SUITESPARSE_VERSION.tar.gz ] && curl -L -o SuiteSparse-$SUITESPARSE_VERSION.tar.gz http://faculty.cse.tamu.edu/davis/SuiteSparse/SuiteSparse-$SUITESPARSE_VERSION.tar.gz
+    [ ! -e pcre-$PCRE_VERSION.tar.gz ] && curl -L -o pcre-$PCRE_VERSION.tar.gz https://ftp.pcre.org/pub/pcre/pcre-$PCRE_VERSION.tar.gz
+    [ ! -e tcl$TCL_VERSION-src.tar.gz ] && curl -L -o tcl$TCL_VERSION-src.tar.gz http://prdownloads.sourceforge.net/tcl/tcl$TCL_VERSION-src.tar.gz
+    [ ! -e tk$TK_VERSION-src.tar.gz ] && curl -L -o tk$TK_VERSION-src.tar.gz http://prdownloads.sourceforge.net/tcl/tk$TK_VERSION-src.tar.gz
+    [ ! -e zlib-$ZLIB_VERSION.tar.gz ] && curl -L -o zlib-$ZLIB_VERSION.tar.gz http://downloads.sourceforge.net/project/libpng/zlib/$ZLIB_VERSION/zlib-$ZLIB_VERSION.tar.gz
+    [ ! -e libpng-$PNG_VERSION.tar.gz ] && curl -L -o libpng-$PNG_VERSION.tar.gz http://prdownloads.sourceforge.net/libpng/libpng-$PNG_VERSION.tar.gz
+    [ ! -e gluegen-v$JOGL_VERSION.tar.7z ] && curl -L -o gluegen-v$JOGL_VERSION.tar.7z https://jogamp.org/deployment/archive/rc/v$JOGL_VERSION/archive/Sources/gluegen-v$JOGL_VERSION.tar.7z
+    [ ! -e jogl-v$JOGL_VERSION.tar.7z ] && curl -L -o jogl-v$JOGL_VERSION.tar.7z https://jogamp.org/deployment/archive/rc/v$JOGL_VERSION/archive/Sources/jogl-v$JOGL_VERSION.tar.7z
 
     # xmlgraphics-commons is included within FOP
     # Batik is included within FOP
-    [ ! -e fop-$FOP_VERSION-bin.zip ] && curl -o fop-$FOP_VERSION-bin.zip http://wwwftp.ciril.fr/pub/apache/xmlgraphics/fop/binaries/fop-$FOP_VERSION-bin.zip
+    [ ! -e fop-$FOP_VERSION-bin.zip ] && curl -L -o fop-$FOP_VERSION-bin.zip http://wwwftp.ciril.fr/pub/apache/xmlgraphics/fop/binaries/fop-$FOP_VERSION-bin.zip
 }
 
 ####################
