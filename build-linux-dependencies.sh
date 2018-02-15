@@ -87,7 +87,7 @@ FOP_VERSION=2.0
 ##### DOWNLOAD #####
 ####################
 function download_dependencies() {
-    [ ! -e gcc-$GCC_VERSION.tgz ] && curl -o gcc-$GCC_VERSION.tar.gz  ftp://ftp.lip6.fr/pub/gcc/releases/gcc-$GCC_VERSION/gcc-$GCC_VERSION.tar.gz 
+    [ ! -e gcc-$GCC_VERSION.tar.gz ] && curl -o gcc-$GCC_VERSION.tar.gz  ftp://ftp.lip6.fr/pub/gcc/releases/gcc-$GCC_VERSION/gcc-$GCC_VERSION.tar.gz 
     [ ! -e apache-ant-$ANT_VERSION-bin.tar.gz ] && curl -o apache-ant-$ANT_VERSION-bin.tar.gz http://archive.apache.org/dist/ant/binaries/apache-ant-$ANT_VERSION-bin.tar.gz
     [ ! -e OpenBLAS-$OPENBLAS_VERSION.tar.gz ] && curl -o OpenBLAS-$OPENBLAS_VERSION.tar.gz https://github.com/xianyi/OpenBLAS/archive/v$OPENBLAS_VERSION.tar.gz
     [ ! -e arpack-ng-$ARPACK_VERSION.tar.gz ] && curl -o arpack-ng-$ARPACK_VERSION.tar.gz https://github.com/opencollab/arpack-ng/archive/$ARPACK_VERSION.tar.gz
