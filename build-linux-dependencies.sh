@@ -92,7 +92,7 @@ function download_dependencies() {
     [ ! -e OpenBLAS-$OPENBLAS_VERSION.tar.gz ] && curl -L -o OpenBLAS-$OPENBLAS_VERSION.tar.gz https://github.com/xianyi/OpenBLAS/archive/v$OPENBLAS_VERSION.tar.gz
     [ ! -e arpack-ng-$ARPACK_VERSION.tar.gz ] && curl -L -o arpack-ng-$ARPACK_VERSION.tar.gz https://github.com/opencollab/arpack-ng/archive/$ARPACK_VERSION.tar.gz
     [ ! -e curl-$CURL_VERSION.tar.gz ] && curl -L -o curl-$CURL_VERSION.tar.gz http://curl.haxx.se/download/curl-$CURL_VERSION.tar.gz
-    [ ! -e eigen-$EIGEN_VERSION.tar.gz ] && curl -L -o eigen-$EIGEN_VERSION.tar.gz
+    [ ! -e eigen-$EIGEN_VERSION.tar.gz ] && curl -L -o eigen-$EIGEN_VERSION.tar.gz http://bitbucket.org/eigen/eigen/get/$EIGEN_VERSION.tar.gz
     [ ! -e fftw-$FFTW_VERSION.tar.gz ] && curl -L -o fftw-$FFTW_VERSION.tar.gz http://www.fftw.org/fftw-$FFTW_VERSION.tar.gz
     [ ! -e hdf5-$HDF5_VERSION.tar.gz ] && curl -L -o hdf5-$HDF5_VERSION.tar.gz http://www.hdfgroup.org/ftp/HDF5/releases/hdf5-$HDF5_VERSION/src/hdf5-$HDF5_VERSION.tar.gz
     [ ! -e libxml2-$LIBXML2_VERSION.tar.gz ] && curl -L -o libxml2-$LIBXML2_VERSION.tar.gz http://xmlsoft.org/sources/libxml2-$LIBXML2_VERSION.tar.gz
