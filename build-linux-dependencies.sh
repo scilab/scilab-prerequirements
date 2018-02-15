@@ -216,7 +216,7 @@ function build_hdf5() {
     cd hdf5-$HDF5_VERSION
     sed -i -e 's|//int i1, i2;|/* int i1, i2; */|' tools/lib/h5diff.c
     ./configure "$@" --with-zlib=$INSTALLDIR --prefix=
-    make -j
+    make
     make install DESTDIR=$INSTALLDIR
     cd -
 
@@ -229,7 +229,7 @@ function build_fftw() {
     tar -xzf fftw-$FFTW_VERSION.tar.gz
     cd fftw-$FFTW_VERSION
     ./configure "$@" --enable-shared --prefix=
-    make -j
+    make
     make install DESTDIR=$INSTALLDIR
     cd -
 
@@ -242,7 +242,7 @@ function build_zlib() {
     tar -xzf zlib-$ZLIB_VERSION.tar.gz
     cd zlib-$ZLIB_VERSION
     ./configure "$@" --prefix=
-    make -j
+    make
     make install DESTDIR=$INSTALLDIR
     cd -
 
@@ -255,7 +255,7 @@ function build_libpng() {
     tar -xzf libpng-$PNG_VERSION.tar.gz
     cd libpng-$PNG_VERSION
     ./configure "$@" --prefix= LDFLAGS="-L$INSTALLDIR/lib" CPPFLAGS="-I$INSTALLDIR/include"
-    make -j LDFLAGS="-L$INSTALLDIR/lib" CPPFLAGS="-I$INSTALLDIR/include"
+    make LDFLAGS="-L$INSTALLDIR/lib" CPPFLAGS="-I$INSTALLDIR/include"
     make install DESTDIR=$INSTALLDIR
     cd -
 
@@ -268,7 +268,7 @@ function build_openssl() {
     tar -xzf openssl-$OPENSSL_VERSION.tar.gz
     cd openssl-$OPENSSL_VERSION
     ./config shared --openssldir=$INSTALLDIR
-    make -j depend all
+    make depend all
     make install
     chmod 644 $INSTALLDIR/lib/libcrypto.*
     chmod 644 $INSTALLDIR/lib/libssl.*
@@ -283,7 +283,7 @@ function build_openssh() {
     tar -xzf openssh-$OPENSSH_VERSION.tar.gz
     cd openssh-$OPENSSH_VERSION
     ./configure --prefix=$INSTALLDIR
-    make -j
+    make
     make install
     cd -
 
@@ -297,7 +297,7 @@ function build_tcl() {
     tar -xzf tcl$TCL_VERSION-src.tar.gz
     cd tcl$TCL_VERSION/unix
     ./configure "$@" --prefix=
-    make -j
+    make
     make install DESTDIR=$INSTALLDIR
     chmod 644 $INSTALLDIR/lib/libtcl*.*
     cd -
@@ -311,7 +311,7 @@ function build_tk() {
     tar -xzf tk$TK_VERSION-src.tar.gz
     cd tk$TK_VERSION/unix
     ./configure "$@" --prefix=
-    make -j
+    make 
     make install DESTDIR=$INSTALLDIR
     chmod 644 $INSTALLDIR/lib/libtk*.*
     cd -
@@ -325,7 +325,7 @@ function build_matio() {
     tar -xzf matio-$MATIO_VERSION.tar.gz
     cd matio-$MATIO_VERSION
     ./configure "$@" --enable-shared --with-hdf5=$INSTALLDIR --with-zlib=$INSTALLDIR --prefix=
-    make -j
+    make
     make install DESTDIR=$INSTALLDIR
     cd -
 
@@ -338,7 +338,7 @@ function build_pcre() {
     tar -xzf pcre-$PCRE_VERSION.tar.gz
     cd pcre-$PCRE_VERSION
     ./configure "$@" --enable-utf8 --enable-unicode-properties --prefix=
-    make -j
+    make
     make install DESTDIR=$INSTALLDIR
     cd -
     sed -i -e 's|^\prefix=.*|\prefix=`pwd`'"/usr|" $INSTALLDIR/bin/pcre-config
@@ -352,7 +352,7 @@ function build_libxml2() {
     tar -xzf libxml2-$LIBXML2_VERSION.tar.gz
     cd libxml2-$LIBXML2_VERSION
     ./configure "$@" --without-python --with-zlib=$INSTALLDIR --prefix=
-    make -j
+    make 
     make install DESTDIR=$INSTALLDIR
     cd -
     sed -i -e 's|^\prefix=.*|\prefix=`pwd`'"/usr|" $INSTALLDIR/bin/xml2-config
@@ -371,7 +371,7 @@ function build_curl() {
         --with-zlib=$INSTALLDIR \
         --prefix= \
         CFLAGS="-O2 -g -DCURL_WANTS_CA_BUNDLE_ENV" # Used in SCI/modules/fileio/etc/fileio.start
-    make -j
+    make 
     make install DESTDIR=$INSTALLDIR
     cd -
     sed -i -e 's|^\prefix=.*|\prefix=`pwd`'"/usr|" $INSTALLDIR/bin/curl-config
@@ -398,7 +398,7 @@ function build_suitesparse() {
     cd SuiteSparse
     sed -i -e 's|^\INSTALL_LIB = .*|\INSTALL_LIB = '"$INSTALLDIR"'\/lib\/|' SuiteSparse_config/SuiteSparse_config.mk
     sed -i -e 's|^\INSTALL_INCLUDE = .*|\INSTALL_INCLUDE = '"$INSTALLDIR"'\/include\/|' SuiteSparse_config/SuiteSparse_config.mk
-    make -j library
+    make library
     make install
 
     UMFPACK_VERSION=$(grep -m1 VERSION UMFPACK/Makefile | sed -e "s|\VERSION = ||")
