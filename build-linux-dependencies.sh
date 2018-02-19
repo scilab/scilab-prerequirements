@@ -66,7 +66,7 @@ OPENBLAS_VERSION=0.2.20
 ANT_VERSION=1.9.4
 ARPACK_VERSION=3.1.5
 CURL_VERSION=7.43.0
-EIGEN_VERSION=3.2.1
+EIGEN_VERSION=3.3.2
 FFTW_VERSION=3.3.3
 HDF5_VERSION=1.8.8
 LIBXML2_VERSION=2.9.1
@@ -204,6 +204,7 @@ function build_eigen() {
 
     tar -zxf eigen-$EIGEN_VERSION.tar.gz
     cd eigen-eigen*
+    rm -fr $INSTALLDIR/include/Eigen
     cp -a Eigen $INSTALLDIR/include/
     cd -
 }
