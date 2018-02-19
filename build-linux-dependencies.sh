@@ -152,7 +152,7 @@ function build_openblas() {
     make TARGET=NEHALEM
 
     # Relink to discard libgfortran.so dependency
-    gcc -shared -o $INSTALLDIR/lib/libopenblas.so.$OPENBLAS_VERSION -Wl,-soname,libopenblas.so.0 -Wl,--whole-archive libopenblas_nehalemp-r$OPENBLAS_VERSION.a -Wl,--no-whole-archive $INSTALLDIR/lib/libgfortran.a $INSTALLDIR/lib/libquadmath.a -lm -lpthread
+    gcc -shared -o $INSTALLDIR/lib/libopenblas.so.$OPENBLAS_VERSION -Wl,-soname,libopenblas.so.0 -Wl,--whole-archive libopenblas_nehalemp-r$OPENBLAS_VERSION.a -Wl,--no-whole-archive $INSTALLDIR/lib/libscigfortran.a $INSTALLDIR/lib/libsciquadmath.a -lm -lpthread
     ln -fs libopenblas.so.$OPENBLAS_VERSION $INSTALLDIR/lib/libopenblas.so.0
     ln -fs libopenblas.so.$OPENBLAS_VERSION $INSTALLDIR/lib/libopenblas.so
     ln -fs libblas.so $INSTALLDIR/lib/libopenblas.so.0
@@ -160,9 +160,9 @@ function build_openblas() {
 
     # BLAS and LAPACK libs
     # TODO: only export BLAS / LAPACK ABI
-    gcc -shared -o $INSTALLDIR/lib/libblas.so.3 -Wl,-soname,libblas.so.3 -Wl,--whole-archive libopenblas_nehalemp-r$OPENBLAS_VERSION.a -Wl,--no-whole-archive $INSTALLDIR/lib/libgfortran.a $INSTALLDIR/lib/libquadmath.a -lm -lpthread
+    gcc -shared -o $INSTALLDIR/lib/libblas.so.3 -Wl,-soname,libblas.so.3 -Wl,--whole-archive libopenblas_nehalemp-r$OPENBLAS_VERSION.a -Wl,--no-whole-archive $INSTALLDIR/lib/libscigfortran.a $INSTALLDIR/lib/libsciquadmath.a -lm -lpthread
     ln -fs libblas.so.3 $INSTALLDIR/lib/libblas.so
-    gcc -shared -o $INSTALLDIR/lib/liblapack.so.3 -Wl,-soname,liblapack.so.3 -Wl,--whole-archive libopenblas_nehalemp-r$OPENBLAS_VERSION.a -Wl,--no-whole-archive $INSTALLDIR/lib/libgfortran.a $INSTALLDIR/lib/libquadmath.a -lm -lpthread
+    gcc -shared -o $INSTALLDIR/lib/liblapack.so.3 -Wl,-soname,liblapack.so.3 -Wl,--whole-archive libopenblas_nehalemp-r$OPENBLAS_VERSION.a -Wl,--no-whole-archive $INSTALLDIR/lib/libscigfortran.a $INSTALLDIR/lib/libsciquadmath.a -lm -lpthread
     ln -fs liblapack.so.3 $INSTALLDIR/lib/liblapack.so
     
     cd -
@@ -190,7 +190,7 @@ function build_arpack() {
     make
 
     # Relink to discard libgfortran.so dependency
-    gcc -shared -o $INSTALLDIR/lib/libarpack.so.$ARPACK_VERSION -Wl,--whole-archive .libs/libarpack.a -Wl,--no-whole-archive -Wl,-soname,libarpack.so.3 $INSTALLDIR/lib/libgfortran.a $INSTALLDIR/lib/libquadmath.a $INSTALLDIR/lib/libblas.so.3 $INSTALLDIR/lib/liblapack.so.3 -lm
+    gcc -shared -o $INSTALLDIR/lib/libarpack.so.$ARPACK_VERSION -Wl,--whole-archive .libs/libarpack.a -Wl,--no-whole-archive -Wl,-soname,libarpack.so.3 $INSTALLDIR/lib/libscigfortran.a $INSTALLDIR/lib/libsciquadmath.a $INSTALLDIR/lib/libblas.so.3 $INSTALLDIR/lib/liblapack.so.3 -lm
     ln -fs libarpack.so.$ARPACK_VERSION $INSTALLDIR/lib/libarpack.so.3
     ln -fs libarpack.so.$ARPACK_VERSION $INSTALLDIR/lib/libarpack.so
 
@@ -455,7 +455,7 @@ function build_suitesparse() {
     UMFPACK_MAJOR_VERSION=$(echo "$UMFPACK_VERSION" | awk -F \. {'print $1'})
     cd UMFPACK/Lib
     gcc -shared -Wl,-soname,libumfpack.so.${UMFPACK_MAJOR_VERSION} -o libumfpack.so.${UMFPACK_VERSION} `ls *.o` \
-      $INSTALLDIR/lib/libsuitesparseconfig.a $INSTALLDIR/lib/libgfortran.a $INSTALLDIR/lib/libquadmath.a \
+      $INSTALLDIR/lib/libsuitesparseconfig.a $INSTALLDIR/lib/libscigfortran.a $INSTALLDIR/lib/libsciquadmath.a \
       $INSTALLDIR/lib/libblas.so.3 $INSTALLDIR/lib/liblapack.so.3 -lm -lrt \
       $INSTALLDIR/lib/libcholmod.so.${CHOLMOD_VERSION} $INSTALLDIR/lib/libcolamd.so.${COLAMD_VERSION} \
       $INSTALLDIR/lib/libccolamd.so.${CCOLAMD_VERSION} $INSTALLDIR/lib/libcamd.so.${CAMD_VERSION}
@@ -521,7 +521,7 @@ function build_jogl() {
 
 function clean_static() {
         rm -f $INSTALLDIR/lib/*.la # Avoid message about moved library while compiling
-        find $INSTALLDIR/lib \( -name '*.a' -or -name '*.a.*' \) -a -not \( -name 'libgfortran.a' -o -name 'libquadmath.a'  \) -exec rm {} +
+        find $INSTALLDIR/lib \( -name '*.a' -or -name '*.a.*' \) -a -not \( -name 'libscigfortran.a' -o -name 'libsciquadmath.a'  \) -exec rm {} +
 }
 
 #########################
