@@ -139,8 +139,8 @@ function build_gcc() {
 	make -C $MACHINE-*-linux-gnu/libgfortran/ CFLAGS='-fPIC -fvisibility=hidden' FCFLAGS='-fPIC -fvisibility=hidden'
         
         # only install needed libraries
-        cp -a *-linux-gnu/libquadmath/.libs/libquadmath.a $INSTALLDIR/lib/
-        cp -a *-linux-gnu/libgfortran/.libs/libgfortran.a $INSTALLDIR/lib/
+        cp -a *-linux-gnu/libquadmath/.libs/libquadmath.a $INSTALLDIR/lib/libsciquadmath.a
+        cp -a *-linux-gnu/libgfortran/.libs/libgfortran.a $INSTALLDIR/lib/libscigfortran.a
 	cd ../..
 }
 
