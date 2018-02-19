@@ -64,7 +64,7 @@ template<typename _MatrixType> class RealSchur
     };
     typedef typename MatrixType::Scalar Scalar;
     typedef std::complex<typename NumTraits<Scalar>::Real> ComplexScalar;
-    typedef Eigen::Index Index; ///< \deprecated since Eigen 3.3
+    typedef typename MatrixType::Index Index;
 
     typedef Matrix<ComplexScalar, ColsAtCompileTime, 1, Options & ~RowMajor, MaxColsAtCompileTime, 1> EigenvalueType;
     typedef Matrix<Scalar, ColsAtCompileTime, 1, Options & ~RowMajor, MaxColsAtCompileTime, 1> ColumnVectorType;
@@ -80,7 +80,7 @@ template<typename _MatrixType> class RealSchur
       *
       * \sa compute() for an example.
       */
-    explicit RealSchur(Index size = RowsAtCompileTime==Dynamic ? 1 : RowsAtCompileTime)
+    RealSchur(Index size = RowsAtCompileTime==Dynamic ? 1 : RowsAtCompileTime)
             : m_matT(size, size),
               m_matU(size, size),
               m_workspaceVector(size),
@@ -100,8 +100,7 @@ template<typename _MatrixType> class RealSchur
       * Example: \include RealSchur_RealSchur_MatrixType.cpp
       * Output: \verbinclude RealSchur_RealSchur_MatrixType.out
       */
-    template<typename InputType>
-    explicit RealSchur(const EigenBase<InputType>& matrix, bool computeU = true)
+    RealSchur(const MatrixType& matrix, bool computeU = true)
             : m_matT(matrix.rows(),matrix.cols()),
               m_matU(matrix.rows(),matrix.cols()),
               m_workspaceVector(matrix.rows()),
@@ -110,7 +109,7 @@ template<typename _MatrixType> class RealSchur
               m_matUisUptodate(false),
               m_maxIters(-1)
     {
-      compute(matrix.derived(), computeU);
+      compute(matrix, computeU);
     }
 
     /** \brief Returns the orthogonal matrix in the Schur decomposition. 
@@ -166,8 +165,7 @@ template<typename _MatrixType> class RealSchur
       *
       * \sa compute(const MatrixType&, bool, Index)
       */
-    template<typename InputType>
-    RealSchur& compute(const EigenBase<InputType>& matrix, bool computeU = true);
+    RealSchur& compute(const MatrixType& matrix, bool computeU = true);
 
     /** \brief Computes Schur decomposition of a Hessenberg matrix H = Z T Z^T
      *  \param[in] matrixH Matrix in Hessenberg form H
@@ -236,7 +234,7 @@ template<typename _MatrixType> class RealSchur
     typedef Matrix<Scalar,3,1> Vector3s;
 
     Scalar computeNormOfT();
-    Index findSmallSubdiagEntry(Index iu);
+    Index findSmallSubdiagEntry(Index iu, const Scalar& norm);
     void splitOffTwoRows(Index iu, bool computeU, const Scalar& exshift);
     void computeShift(Index iu, Index iter, Scalar& exshift, Vector3s& shiftInfo);
     void initFrancisQRStep(Index il, Index iu, const Vector3s& shiftInfo, Index& im, Vector3s& firstHouseholderVector);
@@ -245,33 +243,26 @@ template<typename _MatrixType> class RealSchur
 
 
 template<typename MatrixType>
-template<typename InputType>
-RealSchur<MatrixType>& RealSchur<MatrixType>::compute(const EigenBase<InputType>& matrix, bool computeU)
+RealSchur<MatrixType>& RealSchur<MatrixType>::compute(const MatrixType& matrix, bool computeU)
 {
   eigen_assert(matrix.cols() == matrix.rows());
   Index maxIters = m_maxIters;
   if (maxIters == -1)
     maxIters = m_maxIterationsPerRow * matrix.rows();
 
-  Scalar scale = matrix.derived().cwiseAbs().maxCoeff();
-
   // Step 1. Reduce to Hessenberg form
-  m_hess.compute(matrix.derived()/scale);
+  m_hess.compute(matrix);
 
   // Step 2. Reduce to real Schur form  
   computeFromHessenberg(m_hess.matrixH(), m_hess.matrixQ(), computeU);
-
-  m_matT *= scale;
   
   return *this;
 }
 template<typename MatrixType>
 template<typename HessMatrixType, typename OrthMatrixType>
 RealSchur<MatrixType>& RealSchur<MatrixType>::computeFromHessenberg(const HessMatrixType& matrixH, const OrthMatrixType& matrixQ,  bool computeU)
-{
-  using std::abs;
-
-  m_matT = matrixH;
+{  
+  m_matT = matrixH; 
   if(computeU)
     m_matU = matrixQ;
   
@@ -295,7 +286,7 @@ RealSchur<MatrixType>& RealSchur<MatrixType>::computeFromHessenberg(const HessMa
   {
     while (iu >= 0)
     {
-      Index il = findSmallSubdiagEntry(iu);
+      Index il = findSmallSubdiagEntry(iu, norm);
 
       // Check for convergence
       if (il == iu) // One root found
@@ -352,14 +343,16 @@ inline typename MatrixType::Scalar RealSchur<MatrixType>::computeNormOfT()
 
 /** \internal Look for single small sub-diagonal element and returns its index */
 template<typename MatrixType>
-inline Index RealSchur<MatrixType>::findSmallSubdiagEntry(Index iu)
+inline typename MatrixType::Index RealSchur<MatrixType>::findSmallSubdiagEntry(Index iu, const Scalar& norm)
 {
   using std::abs;
   Index res = iu;
   while (res > 0)
   {
     Scalar s = abs(m_matT.coeff(res-1,res-1)) + abs(m_matT.coeff(res,res));
-    if (abs(m_matT.coeff(res,res-1)) <= NumTraits<Scalar>::epsilon() * s)
+    if (s == 0.0)
+      s = norm;
+    if (abs(m_matT.coeff(res,res-1)) < NumTraits<Scalar>::epsilon() * s)
       break;
     res--;
   }
@@ -464,7 +457,9 @@ inline void RealSchur<MatrixType>::initFrancisQRStep(Index il, Index iu, const V
     const Scalar lhs = m_matT.coeff(im,im-1) * (abs(v.coeff(1)) + abs(v.coeff(2)));
     const Scalar rhs = v.coeff(0) * (abs(m_matT.coeff(im-1,im-1)) + abs(Tmm) + abs(m_matT.coeff(im+1,im+1)));
     if (abs(lhs) < NumTraits<Scalar>::epsilon() * rhs)
+    {
       break;
+    }
   }
 }
 

@@ -204,7 +204,7 @@ function build_eigen() {
 
     tar -zxf eigen-$EIGEN_VERSION.tar.gz
     cd eigen-eigen*
-    cp -R Eigen/ $INSTALLDIR/include/
+    cp -a Eigen $INSTALLDIR/include/
     cd -
 }
 
