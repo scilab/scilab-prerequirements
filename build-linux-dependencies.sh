@@ -384,11 +384,11 @@ function build_ocaml() {
 
     tar -zxf ocaml-$OCAML_VERSION.tar.gz
     cd ocaml-$OCAML_VERSION
-    ./configure "$@" -prefix $HOME/ocaml/
+    ./configure "$@" -prefix $INSTALLDIR
     make world bootstrap opt
     make install
     cd -
-    echo "Do not forget to add $HOME/ocaml/bin/ to your PATH variable."
+    echo "Do not forget to add $INSTALLDIR/bin/ to your PATH variable."
 }
 
 function build_suitesparse() {
