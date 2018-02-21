@@ -28,14 +28,20 @@ MACHINE=$(uname -m)
 if [ "$KERNEL" = "Linux" ]; then
     if [ "$MACHINE" = "i686" ]; then
         SPECIFICDIR="linux"
+        USRDIR="/usr/lib"
+        LIBDIR="/lib"
     elif [ "$MACHINE" = "x86_64" ]; then
         SPECIFICDIR="linux_x64"
+        USRDIR="/usr/lib64"
+        LIBDIR="/lib64"
     else
         echo "Unknown machine $MACHINE"
         exit 1
     fi
 elif [ "$KERNEL" = "Darwin" ]; then
     SPECIFICDIR="macosx"
+    USRDIR="/usr/lib"
+    LIBDIR="/lib"
 else
     echo "Unknown kernel $KERNEL"
     exit 1
@@ -46,6 +52,8 @@ echo "Scilab prerequirements for $(uname -s)-$(uname -m)"
 #INSTALLDIR=$(pwd)/$SPECIFICDIR/$KERNEL-$MACHINE
 INSTALLDIR=$(pwd)/$SPECIFICDIR/usr
 DEVTOOLSDIR=$(pwd)/../../../../../Dev-Tools
+LIBTHIRDPARTYDIR=$INSTALLDIR/../lib/thirdparty
+JAVATHIRDPARTYDIR=$INSTALLDIR/../thirdparty
 
 echo
 echo "INSTALLDIR     = $INSTALLDIR"
@@ -508,8 +516,9 @@ function build_gluegen() {
     cd -
 
     [ "$KERNEL" == "Darwin" ] && shrext_cmds=.dyld || shrext_cmds=.so;
-    cp -a gluegen-v$JOGL_VERSION/build/obj/*$shrext_cmds $INSTALLDIR/lib
-    cp -a gluegen-v$JOGL_VERSION/build/gluegen-rt.jar $INSTALLDIR/share/java/gluegen-rt.jar
+    mkdir -p $INSTALLDIR/lib/java
+    cp -a gluegen-v$JOGL_VERSION/build/obj/*$shrext_cmds $LIBTHIRDPARTYDIR/
+    cp -a gluegen-v$JOGL_VERSION/build/gluegen-rt.jar $JAVATHIRDPARTYDIR/gluegen-rt.jar
  
     clean_static
 }
@@ -528,8 +537,11 @@ function build_jogl() {
     cd -
 
     [ "$KERNEL" == "Darwin" ] && shrext_cmds=.dyld || shrext_cmds=.so;
-    cp -a jogl-v$JOGL_VERSION/build/lib/*$shrext_cmds $INSTALLDIR/lib
-    cp -a jogl-v$JOGL_VERSION/build/jogl-all.jar $INSTALLDIR/share/java/jogl.jar
+    cp -a jogl-v$JOGL_VERSION/build/lib/*$shrext_cmds $LIBTHIRDPARTYDIR/
+    rm -f $LIBTHIRDPARTYDIR/libjogl_cg$shrext_cmds # not needed for us
+    cp -a jogl-v$JOGL_VERSION/build/jar/jogl-all.jar $JAVATHIRDPARTYDIR/jogl.jar
+
+    clean_static
 }
 
 function clean_static() {
@@ -630,15 +642,6 @@ do
       #####################################
       ##### lib/thirdparty/ directory #####
       #####################################
-      if [ "$MACHINE" = "i686" ]; then
-        USRDIR="/usr/lib"
-        LIBDIR="/lib"
-      elif [ "$MACHINE" = "x86_64" ]; then
-        USRDIR="/usr/lib64"
-        LIBDIR="/lib64"
-      fi
-
-      LIBTHIRDPARTYDIR=$INSTALLDIR/../lib/thirdparty
 
       # Provide OpenBLAS blas and lapack
       # ensure that ld.so always load the same "real" file to reduce overhead
@@ -755,8 +758,6 @@ do
     # we usually do not need to recompile JARs and we also re-use major jar 
     # dependencies (shipped into the binary zip)
 
-    JAVATHIRDPARTYDIR=$INSTALLDIR/../thirdparty
-
     # XMLGraphics (included in FOP)
     # Batik (included in FOP)
     # FOP
@@ -808,13 +809,14 @@ do
     ;;
 
   *)
-    if $(type build_$1 &>/dev/null); then
+      
+    if ! type build_$1 &>/dev/null ; then
       echo "Unknown dependency name $DEPENDENCY"
       exit 42
-    else
-      build_$1
-      shift
     fi
+
+    build_$1
+    shift
     ;;
 esac
 done
