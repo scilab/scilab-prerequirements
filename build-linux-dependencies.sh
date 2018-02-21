@@ -32,13 +32,13 @@ if [ "$KERNEL" = "Linux" ]; then
         SPECIFICDIR="linux_x64"
     else
         echo "Unknown machine $MACHINE"
-        exit
+        exit 1
     fi
 elif [ "$KERNEL" = "Darwin" ]; then
     SPECIFICDIR="macosx"
 else
     echo "Unknown kernel $KERNEL"
-    exit
+    exit 1
 fi
 
 echo "Scilab prerequirements for $(uname -s)-$(uname -m)"
@@ -119,6 +119,8 @@ function download_dependencies() {
 ####################
 
 function build_gcc() {
+        [ "$KERNEL" == "Darwin" ] && echo "gcc is not needed of macOS ; use system's compilers!" && exit 1
+
 	[ -d gcc-$GCC_VERSION ] && rm -fr gcc-$GCC_VERSION
 
 	tar -xzf gcc-$GCC_VERSION.tar.gz
@@ -145,6 +147,7 @@ function build_gcc() {
 }
 
 function build_openblas() {
+    [ "$KERNEL" == "Darwin" ] && echo "OpenBLAS is not needed of macOS ; use system's Accelerate/vecLib" && exit 1
     [ -d OpenBLAS-$OPENBLAS_VERSION ] && rm -fr OpenBLAS-$OPENBLAS_VERSION
 
     tar -xzf OpenBLAS-$OPENBLAS_VERSION.tar.gz
@@ -184,15 +187,22 @@ function build_arpack() {
 
     tar -xzf arpack-ng-$ARPACK_VERSION.tar.gz
     cd arpack-ng-$ARPACK_VERSION
-    ./configure "$@" --prefix= \
+    
+    if [ "$KERNEL" == "Linux" ]; then
+      ./configure "$@" --prefix= \
         --with-blas="$INSTALLDIR/lib/libblas.so" \
         --with-lapack="$INSTALLDIR/lib/liblapack.so"
+    elif [ "$KERNEL" == "Darwin" ]; then
+      ./configure
+    fi
     make
 
-    # Relink to discard libgfortran.so dependency
-    gcc -shared -o $INSTALLDIR/lib/libarpack.so.$ARPACK_VERSION -Wl,--whole-archive .libs/libarpack.a -Wl,--no-whole-archive -Wl,-soname,libarpack.so.3 $INSTALLDIR/lib/libscigfortran.a $INSTALLDIR/lib/libsciquadmath.a $INSTALLDIR/lib/libblas.so.3 $INSTALLDIR/lib/liblapack.so.3 -lm
-    ln -fs libarpack.so.$ARPACK_VERSION $INSTALLDIR/lib/libarpack.so.3
-    ln -fs libarpack.so.$ARPACK_VERSION $INSTALLDIR/lib/libarpack.so
+    if [ "$KERNEL" == "Linux" ]; then
+      # Relink to discard libgfortran.so dependency
+      gcc -shared -o $INSTALLDIR/lib/libarpack.so.$ARPACK_VERSION -Wl,--whole-archive .libs/libarpack.a -Wl,--no-whole-archive -Wl,-soname,libarpack.so.3 $INSTALLDIR/lib/libscigfortran.a $INSTALLDIR/lib/libsciquadmath.a $INSTALLDIR/lib/libblas.so.3 $INSTALLDIR/lib/liblapack.so.3 -lm
+      ln -fs libarpack.so.$ARPACK_VERSION $INSTALLDIR/lib/libarpack.so.3
+      ln -fs libarpack.so.$ARPACK_VERSION $INSTALLDIR/lib/libarpack.so
+    fi
 
     cd -
 
@@ -402,6 +412,9 @@ function build_suitesparse() {
     make library
     make install
 
+    # do not rebuild libraries on macOS, the default ones are used
+    [ "$KERNEL" == "Darwin" ] && return
+
     UMFPACK_VERSION=$(grep -m1 VERSION UMFPACK/Makefile | sed -e "s|\VERSION = ||")
 
     # See http://slackware.org.uk/slacky/slackware-12.2/development/suitesparse/3.1.0/src/suitesparse.SlackBuild
@@ -490,13 +503,13 @@ function build_gluegen() {
     rm gluegen-v$JOGL_VERSION.tar
 
     export ANT_HOME=$(pwd)/$SPECIFICDIR/java/ant
-    export JAVA_HOME=$(pwd)/$SPECIFICDIR/java/jdk1.8.0_65
     cd gluegen-v$JOGL_VERSION/make
     ../../$SPECIFICDIR/java/ant/bin/ant
     cd -
 
-    cp -a gluegen-v$JOGL_VERSION/build/obj/libgluegen-rt.so $INSTALLDIR/lib
-    cp -a gluegen-v$JOGL_VERSION/build/gluegen-rt.jar $INSTALLDIR/share/java
+    [ "$KERNEL" == "Darwin" ] && shrext_cmds=.dyld || shrext_cmds=.so;
+    cp -a gluegen-v$JOGL_VERSION/build/obj/*$shrext_cmds $INSTALLDIR/lib
+    cp -a gluegen-v$JOGL_VERSION/build/gluegen-rt.jar $INSTALLDIR/share/java/gluegen-rt.jar
  
     clean_static
 }
@@ -510,13 +523,13 @@ function build_jogl() {
 
     ln -fs gluegen-v$JOGL_VERSION gluegen
     export ANT_HOME=$(pwd)/$SPECIFICDIR/java/ant
-    export JAVA_HOME=$(pwd)/$SPECIFICDIR/java/jdk1.8.0_65
     cd jogl-v$JOGL_VERSION/make
     ../../$SPECIFICDIR/java/ant/bin/ant
     cd -
 
-    cp -a jogl-v$JOGL_VERSION/build/obj/libjogl.so $INSTALLDIR/lib
-    cp -a jogl-v$JOGL_VERSION/build/jogl.jar $INSTALLDIR/share/java
+    [ "$KERNEL" == "Darwin" ] && shrext_cmds=.dyld || shrext_cmds=.so;
+    cp -a jogl-v$JOGL_VERSION/build/lib/*$shrext_cmds $INSTALLDIR/lib
+    cp -a jogl-v$JOGL_VERSION/build/jogl-all.jar $INSTALLDIR/share/java/jogl.jar
 }
 
 function clean_static() {
@@ -595,11 +608,6 @@ do
 
     "download")
       download_dependencies
-      shift
-      ;;
-
-    "gcc" | "openblas" | "ant" | "arpack" | "curl" | "eigen" | "fftw" | "hdf5" | "libxml2" | "matio" | "openssl" | "openssh" | "pcre" | "suitesparse" | "tcl" | "tk" | "zlib" | "libpng" | "gluegen" | "jogl" | "ocaml" )
-      build_$1
       shift
       ;;
 
@@ -800,8 +808,13 @@ do
     ;;
 
   *)
-    echo "Unknown dependency name $DEPENDENCY"
-    exit 42
+    if $(type build_$1 &>/dev/null); then
+      echo "Unknown dependency name $DEPENDENCY"
+      exit 42
+    else
+      build_$1
+      shift
+    fi
     ;;
 esac
 done
