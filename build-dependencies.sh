@@ -63,6 +63,9 @@ echo
 #[ ! -d $DEVTOOLSDIR ] && echo "Dev-tools directory not found" && exit
 
 [ ! -d $INSTALLDIR ] && mkdir $INSTALLDIR -p
+export PATH=$INSTALLDIR/bin:$PATH
+export LD_LIBRARY_PATH=$INSTALLDIR/lib
+export MAKEFLAGS=-j2
 
 ################################
 ##### DEPENDENCIES VERSION #####
@@ -95,27 +98,27 @@ FOP_VERSION=2.0
 ##### DOWNLOAD #####
 ####################
 function download_dependencies() {
-    [ ! -e gcc-$GCC_VERSION.tar.gz ] && curl -L -o gcc-$GCC_VERSION.tar.gz  ftp://ftp.lip6.fr/pub/gcc/releases/gcc-$GCC_VERSION/gcc-$GCC_VERSION.tar.gz 
+    [ ! -e gcc-$GCC_VERSION.tar.gz ] && curl -L -o gcc-$GCC_VERSION.tar.gz  http://ftp.lip6.fr/pub/gcc/releases/gcc-$GCC_VERSION/gcc-$GCC_VERSION.tar.gz 
     [ ! -e apache-ant-$ANT_VERSION-bin.tar.gz ] && curl -L -o apache-ant-$ANT_VERSION-bin.tar.gz http://archive.apache.org/dist/ant/binaries/apache-ant-$ANT_VERSION-bin.tar.gz
-    [ ! -e OpenBLAS-$OPENBLAS_VERSION.tar.gz ] && curl -L -o OpenBLAS-$OPENBLAS_VERSION.tar.gz https://github.com/xianyi/OpenBLAS/archive/v$OPENBLAS_VERSION.tar.gz
-    [ ! -e arpack-ng-$ARPACK_VERSION.tar.gz ] && curl -L -o arpack-ng-$ARPACK_VERSION.tar.gz https://github.com/opencollab/arpack-ng/archive/$ARPACK_VERSION.tar.gz
+    [ ! -e OpenBLAS-$OPENBLAS_VERSION.tar.gz ] && curl -L -o OpenBLAS-$OPENBLAS_VERSION.tar.gz http://github.com/xianyi/OpenBLAS/archive/v$OPENBLAS_VERSION.tar.gz
+    [ ! -e arpack-ng-$ARPACK_VERSION.tar.gz ] && curl -L -o arpack-ng-$ARPACK_VERSION.tar.gz http://github.com/opencollab/arpack-ng/archive/$ARPACK_VERSION.tar.gz
     [ ! -e curl-$CURL_VERSION.tar.gz ] && curl -L -o curl-$CURL_VERSION.tar.gz http://curl.haxx.se/download/curl-$CURL_VERSION.tar.gz
     [ ! -e eigen-$EIGEN_VERSION.tar.gz ] && curl -L -o eigen-$EIGEN_VERSION.tar.gz http://bitbucket.org/eigen/eigen/get/$EIGEN_VERSION.tar.gz
     [ ! -e fftw-$FFTW_VERSION.tar.gz ] && curl -L -o fftw-$FFTW_VERSION.tar.gz http://www.fftw.org/fftw-$FFTW_VERSION.tar.gz
-    [ ! -e hdf5-$HDF5_VERSION.tar.gz ] && curl -L -o hdf5-$HDF5_VERSION.tar.gz https://support.hdfgroup.org/ftp/HDF5/releases/hdf5-1.8/hdf5-$HDF5_VERSION/src/hdf5-$HDF5_VERSION.tar.gz
+    [ ! -e hdf5-$HDF5_VERSION.tar.gz ] && curl -L -o hdf5-$HDF5_VERSION.tar.gz http://support.hdfgroup.org/ftp/HDF5/releases/hdf5-1.8/hdf5-$HDF5_VERSION/src/hdf5-$HDF5_VERSION.tar.gz
     [ ! -e libxml2-$LIBXML2_VERSION.tar.gz ] && curl -L -o libxml2-$LIBXML2_VERSION.tar.gz http://xmlsoft.org/sources/libxml2-$LIBXML2_VERSION.tar.gz
     [ ! -e matio-$MATIO_VERSION.tar.gz ] && curl -L -o matio-$MATIO_VERSION.tar.gz http://downloads.sourceforge.net/project/matio/matio/$MATIO_VERSION/matio-$MATIO_VERSION.tar.gz
     [ ! -e ocaml-$OCAML_VERSION.tar.gz ] && curl -L -o ocaml-$OCAML_VERSION.tar.gz http://caml.inria.fr/pub/distrib/ocaml-4.01/ocaml-$OCAML_VERSION.tar.gz
     [ ! -e openssl-$OPENSSL_VERSION.tar.gz ] && curl -L -o openssl-$OPENSSL_VERSION.tar.gz http://www.openssl.org/source/openssl-$OPENSSL_VERSION.tar.gz
-    [ ! -e openssh-$OPENSSH_VERSION.tar.gz ] && curl -L -o openssh-$OPENSSH_VERSION.tar.gz https://mirrors.ircam.fr/pub/OpenBSD/OpenSSH/portable/openssh-$OPENSSH_VERSION.tar.gz
+    [ ! -e openssh-$OPENSSH_VERSION.tar.gz ] && curl -L -o openssh-$OPENSSH_VERSION.tar.gz http://mirrors.ircam.fr/pub/OpenBSD/OpenSSH/portable/openssh-$OPENSSH_VERSION.tar.gz
     [ ! -e SuiteSparse-$SUITESPARSE_VERSION.tar.gz ] && curl -L -o SuiteSparse-$SUITESPARSE_VERSION.tar.gz http://faculty.cse.tamu.edu/davis/SuiteSparse/SuiteSparse-$SUITESPARSE_VERSION.tar.gz
-    [ ! -e pcre-$PCRE_VERSION.tar.gz ] && curl -L -o pcre-$PCRE_VERSION.tar.gz https://ftp.pcre.org/pub/pcre/pcre-$PCRE_VERSION.tar.gz
+    [ ! -e pcre-$PCRE_VERSION.tar.gz ] && curl -L -o pcre-$PCRE_VERSION.tar.gz http://ftp.pcre.org/pub/pcre/pcre-$PCRE_VERSION.tar.gz
     [ ! -e tcl$TCL_VERSION-src.tar.gz ] && curl -L -o tcl$TCL_VERSION-src.tar.gz http://prdownloads.sourceforge.net/tcl/tcl$TCL_VERSION-src.tar.gz
     [ ! -e tk$TK_VERSION-src.tar.gz ] && curl -L -o tk$TK_VERSION-src.tar.gz http://prdownloads.sourceforge.net/tcl/tk$TK_VERSION-src.tar.gz
     [ ! -e zlib-$ZLIB_VERSION.tar.gz ] && curl -L -o zlib-$ZLIB_VERSION.tar.gz http://downloads.sourceforge.net/project/libpng/zlib/$ZLIB_VERSION/zlib-$ZLIB_VERSION.tar.gz
     [ ! -e libpng-$PNG_VERSION.tar.gz ] && curl -L -o libpng-$PNG_VERSION.tar.gz http://prdownloads.sourceforge.net/libpng/libpng-$PNG_VERSION.tar.gz
-    [ ! -e gluegen-v$JOGL_VERSION.tar.7z ] && curl -L -o gluegen-v$JOGL_VERSION.tar.7z https://jogamp.org/deployment/archive/rc/v$JOGL_VERSION/archive/Sources/gluegen-v$JOGL_VERSION.tar.7z
-    [ ! -e jogl-v$JOGL_VERSION.tar.7z ] && curl -L -o jogl-v$JOGL_VERSION.tar.7z https://jogamp.org/deployment/archive/rc/v$JOGL_VERSION/archive/Sources/jogl-v$JOGL_VERSION.tar.7z
+    [ ! -e gluegen-v$JOGL_VERSION.tar.7z ] && curl -L -o gluegen-v$JOGL_VERSION.tar.7z http://jogamp.org/deployment/archive/rc/v$JOGL_VERSION/archive/Sources/gluegen-v$JOGL_VERSION.tar.7z
+    [ ! -e jogl-v$JOGL_VERSION.tar.7z ] && curl -L -o jogl-v$JOGL_VERSION.tar.7z http://jogamp.org/deployment/archive/rc/v$JOGL_VERSION/archive/Sources/jogl-v$JOGL_VERSION.tar.7z
 
     # xmlgraphics-commons is included within FOP
     # Batik is included within FOP
@@ -136,21 +139,20 @@ function build_gcc() {
 	./contrib/download_prerequisites
 	mkdir gcc-build
 	cd gcc-build
-	../configure --prefix= --enable-language=c,c++,fortran --disable-multilib
-        make
+	../configure --prefix=$INSTALLDIR --enable-language=c,c++,fortran --disable-multilib
+        make 
+	make install
 
-        # NEEDED FOR CLEAN DEPENDENCIES
-	# enforce fPIC even for static libraries (to relink them to shared objects)
-        rm -f $MACHINE-*-linux-gnu/libquadmath/*.o $MACHINE-*-linux-gnu/libquadmath/*.lo
-        rm -f $MACHINE-*-linux-gnu/libquadmath/*/*.o $MACHINE-*-linux-gnu/libquadmath/*/*.lo
-	make -C $MACHINE-*-linux-gnu/libquadmath/ CFLAGS='-fPIC -fvisibility=hidden' FCFLAGS='-fPIC -fvisibility=hidden'
+        # NEEDED FOR CLEAN DEPENDENCIES: build scilab specific libs
+	gcc -shared -fPIC -Wl,-soname,libscistdc++.so.6 -o $INSTALLDIR/lib/libscistdc++.so.6 -Wl,--whole-archive $INSTALLDIR/lib/libstdc++.a
+	ln -s libscistdc++.so.6 $INSTALLDIR/lib/libscistdc++.so
 
-        rm -f $MACHINE-*-linux-gnu/libgfortran/*.o $MACHINE-*-linux-gnu/libgfortran/*.lo
-	make -C $MACHINE-*-linux-gnu/libgfortran/ CFLAGS='-fPIC -fvisibility=hidden' FCFLAGS='-fPIC -fvisibility=hidden'
-        
-        # only install needed libraries
-        cp -a *-linux-gnu/libquadmath/.libs/libquadmath.a $INSTALLDIR/lib/libsciquadmath.a
-        cp -a *-linux-gnu/libgfortran/.libs/libgfortran.a $INSTALLDIR/lib/libscigfortran.a
+	gcc -shared -fPIC -Wl,-soname,libsciquadmath.so.0 -o $INSTALLDIR/lib/libsciquadmath.so.0  -Wl,--whole-archive $INSTALLDIR/lib/libquadmath.a
+	ln -s libsciquadmath.so.0 $INSTALLDIR/lib/libsciquadmath.so
+
+	gcc -shared -fPIC -Wl,-soname,libscigfortran.so.4 -o $INSTALLDIR/lib/libscigfortran.so.4  $INSTALLDIR/lib/libquadmath.so.0 -Wl,--whole-archive $INSTALLDIR/lib/libgfortran.a
+	ln -s libscigfortran.so.4 $INSTALLDIR/lib/libscigfortran.so
+
 	cd ../..
 }
 
