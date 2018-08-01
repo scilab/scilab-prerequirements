@@ -65,11 +65,13 @@ echo
 [ ! -d $INSTALLDIR ] && mkdir $INSTALLDIR -p
 export PATH=$INSTALLDIR/bin:$PATH
 export LD_LIBRARY_PATH=$INSTALLDIR/lib
-export MAKEFLAGS=-j2
 
 ################################
 ##### DEPENDENCIES VERSION #####
 ################################
+MPFR_VERSION=2.4.2
+GMP_VERSION=4.3.2
+MPC_VERSION=0.8.1
 GCC_VERSION=4.8.2
 LAPACK_VERSION=3.6.0
 ATLAS_VERSION=3.10.2
@@ -97,7 +99,11 @@ FOP_VERSION=2.0
 
 ##### DOWNLOAD #####
 ####################
+
 function download_dependencies() {
+    [ ! -e mpfr-$MPFR_VERSION.tar.bz2 ] && curl -kL -o mpfr-$MPFR_VERSION.tar.bz2 ftp://gcc.gnu.org/pub/gcc/infrastructure/mpfr-$MPFR_VERSION.tar.bz2
+    [ ! -e gmp-$GMP_VERSION.tar.bz2 ] && curl -kL -o gmp-$GMP_VERSION.tar.bz2 ftp://gcc.gnu.org/pub/gcc/infrastructure/gmp-$GMP_VERSION.tar.bz2
+    [ ! -e mpc-$MPC_VERSION.tar.gz ] && curl -kL -o mpc-$MPC_VERSION.tar.gz ftp://gcc.gnu.org/pub/gcc/infrastructure/mpc-$MPC_VERSION.tar.gz
     [ ! -e gcc-$GCC_VERSION.tar.gz ] && curl -kL -o gcc-$GCC_VERSION.tar.gz  http://ftp.lip6.fr/pub/gcc/releases/gcc-$GCC_VERSION/gcc-$GCC_VERSION.tar.gz 
     [ ! -e apache-ant-$ANT_VERSION-bin.tar.gz ] && curl -kL -o apache-ant-$ANT_VERSION-bin.tar.gz http://archive.apache.org/dist/ant/binaries/apache-ant-$ANT_VERSION-bin.tar.gz
     [ ! -e OpenBLAS-$OPENBLAS_VERSION.tar.gz ] && curl -kL -o OpenBLAS-$OPENBLAS_VERSION.tar.gz https://github.com/xianyi/OpenBLAS/archive/v$OPENBLAS_VERSION.tar.gz
@@ -136,22 +142,36 @@ function build_gcc() {
 
 	tar -xzf gcc-$GCC_VERSION.tar.gz
 	cd gcc-$GCC_VERSION
-	./contrib/download_prerequisites
+	tar -xjf ../mpfr-$MPFR_VERSION.tar.bz2
+        ln -sf mpfr-$MPFR_VERSION mpfr
+	tar -xjf ../gmp-$GMP_VERSION.tar.bz2
+        ln -sf gmp-$GMP_VERSION gmp
+	tar -xzf ../mpc-$MPC_VERSION.tar.gz
+        ln -sf mpc-$MPC_VERSION mpc
+
+        # patch cfns: fix mismatch in gnu_inline attributes
+        sed -i 128d gcc/cp/cfns.h 
+        # patch https://gcc.gnu.org/viewcvs/gcc?view=revision&revision=249958
+        sed -i 's/struct ucontext/ucontext_t/g' libgcc/config/*/linux-unwind.h
+        # hard disable sanitizer
+        rm -fr libsanitizer
+
 	mkdir gcc-build
 	cd gcc-build
-	../configure --prefix=$INSTALLDIR --enable-language=c,c++,fortran --disable-multilib
+	../configure --prefix=$INSTALLDIR --enable-language=c,c++,fortran --disable-multilib \
+             --disable-libgcj --disable-lto --disable-bootstrap
         make 
-	make install
+        make install
 
         # NEEDED FOR CLEAN DEPENDENCIES: build scilab specific libs
-	gcc -shared -fPIC -Wl,-soname,libscistdc++.so.6 -o $INSTALLDIR/lib/libscistdc++.so.6 -Wl,--whole-archive $INSTALLDIR/lib/libstdc++.a
-	ln -s libscistdc++.so.6 $INSTALLDIR/lib/libscistdc++.so
+	gcc -shared -fPIC -nodefaultlibs -Wl,-soname,libscistdc++.so.6 -o $INSTALLDIR/lib/libscistdc++.so.6 -Wl,--whole-archive */libstdc++-v3/src/.libs/libstdc++.a
+	ln -fs -t $INSTALLDIR/lib libscistdc++.so.6 libscistdc++.so
 
-	gcc -shared -fPIC -Wl,-soname,libsciquadmath.so.0 -o $INSTALLDIR/lib/libsciquadmath.so.0  -Wl,--whole-archive $INSTALLDIR/lib/libquadmath.a
-	ln -s libsciquadmath.so.0 $INSTALLDIR/lib/libsciquadmath.so
+	gcc -shared -fPIC -nodefaultlibs -Wl,-soname,libsciquadmath.so.0 -o $INSTALLDIR/lib/libsciquadmath.so.0  -Wl,--whole-archive */libquadmath/.libs/libquadmath.a
+	ln -fs -t $INSTALLDIR/lib libsciquadmath.so.0 libsciquadmath.so
 
-	gcc -shared -fPIC -Wl,-soname,libscigfortran.so.4 -o $INSTALLDIR/lib/libscigfortran.so.4  $INSTALLDIR/lib/libquadmath.so.0 -Wl,--whole-archive $INSTALLDIR/lib/libgfortran.a
-	ln -s libscigfortran.so.4 $INSTALLDIR/lib/libscigfortran.so
+	gcc -shared -fPIC -nodefaultlibs -Wl,-soname,libscigfortran.so.3 -o $INSTALLDIR/lib/libscigfortran.so.3  $INSTALLDIR/lib/libquadmath.so.0 -Wl,--whole-archive */libgfortran/.libs/libgfortran.a
+	ln -fs -t $INSTALLDIR/lib libscigfortran.so.3 $INSTALLDIR/lib/libscigfortran.so
 
 	cd ../..
 }
@@ -164,8 +184,8 @@ function build_openblas() {
     cd OpenBLAS-$OPENBLAS_VERSION
     make TARGET=NEHALEM
 
-    # Relink to discard libgfortran.so dependency
-    gcc -shared -o $INSTALLDIR/lib/libopenblas.so.$OPENBLAS_VERSION -Wl,-soname,libopenblas.so.0 -Wl,--whole-archive libopenblas_nehalemp-r$OPENBLAS_VERSION.a -Wl,--no-whole-archive $INSTALLDIR/lib/libscigfortran.a $INSTALLDIR/lib/libsciquadmath.a -lm -lpthread
+    # Relink to enforce scigfortran dependency
+    gcc -shared -o $INSTALLDIR/lib/libopenblas.so.$OPENBLAS_VERSION -Wl,-soname,libopenblas.so.0 -Wl,--whole-archive libopenblas_nehalemp-r$OPENBLAS_VERSION.a -Wl,--no-whole-archive $INSTALLDIR/lib/libscigfortran.so $INSTALLDIR/lib/libsciquadmath.so -lm -lpthread
     ln -fs libopenblas.so.$OPENBLAS_VERSION $INSTALLDIR/lib/libopenblas.so.0
     ln -fs libopenblas.so.$OPENBLAS_VERSION $INSTALLDIR/lib/libopenblas.so
     ln -fs libblas.so $INSTALLDIR/lib/libopenblas.so.0
@@ -173,9 +193,9 @@ function build_openblas() {
 
     # BLAS and LAPACK libs
     # TODO: only export BLAS / LAPACK ABI
-    gcc -shared -o $INSTALLDIR/lib/libblas.so.3 -Wl,-soname,libblas.so.3 -Wl,--whole-archive libopenblas_nehalemp-r$OPENBLAS_VERSION.a -Wl,--no-whole-archive $INSTALLDIR/lib/libscigfortran.a $INSTALLDIR/lib/libsciquadmath.a -lm -lpthread
+    gcc -shared -o $INSTALLDIR/lib/libblas.so.3 -Wl,-soname,libblas.so.3 -Wl,--whole-archive libopenblas_nehalemp-r$OPENBLAS_VERSION.a -Wl,--no-whole-archive $INSTALLDIR/lib/libscigfortran.so $INSTALLDIR/lib/libsciquadmath.so -lm -lpthread
     ln -fs libblas.so.3 $INSTALLDIR/lib/libblas.so
-    gcc -shared -o $INSTALLDIR/lib/liblapack.so.3 -Wl,-soname,liblapack.so.3 -Wl,--whole-archive libopenblas_nehalemp-r$OPENBLAS_VERSION.a -Wl,--no-whole-archive $INSTALLDIR/lib/libscigfortran.a $INSTALLDIR/lib/libsciquadmath.a -lm -lpthread
+    gcc -shared -o $INSTALLDIR/lib/liblapack.so.3 -Wl,-soname,liblapack.so.3 -Wl,--whole-archive libopenblas_nehalemp-r$OPENBLAS_VERSION.a -Wl,--no-whole-archive $INSTALLDIR/lib/libscigfortran.so $INSTALLDIR/lib/libsciquadmath.so -lm -lpthread
     ln -fs liblapack.so.3 $INSTALLDIR/lib/liblapack.so
     
     cd -
@@ -208,8 +228,8 @@ function build_arpack() {
     make
 
     if [ "$KERNEL" == "Linux" ]; then
-      # Relink to discard libgfortran.so dependency
-      gcc -shared -o $INSTALLDIR/lib/libarpack.so.$ARPACK_VERSION -Wl,--whole-archive .libs/libarpack.a -Wl,--no-whole-archive -Wl,-soname,libarpack.so.3 $INSTALLDIR/lib/libscigfortran.a $INSTALLDIR/lib/libsciquadmath.a $INSTALLDIR/lib/libblas.so.3 $INSTALLDIR/lib/liblapack.so.3 -lm
+      # Relink to enforce scigfortran dependency
+      gcc -shared -o $INSTALLDIR/lib/libarpack.so.$ARPACK_VERSION -Wl,--whole-archive .libs/libarpack.a -Wl,--no-whole-archive -Wl,-soname,libarpack.so.3 $INSTALLDIR/lib/libscigfortran.so $INSTALLDIR/lib/libsciquadmath.so $INSTALLDIR/lib/libblas.so $INSTALLDIR/lib/liblapack.so -lm
       ln -fs libarpack.so.$ARPACK_VERSION $INSTALLDIR/lib/libarpack.so.3
       ln -fs libarpack.so.$ARPACK_VERSION $INSTALLDIR/lib/libarpack.so
     fi
@@ -387,6 +407,7 @@ function build_curl() {
     tar -zxf curl-$CURL_VERSION.tar.gz
     mv curl-curl-${CURL_VERSION//\./_} curl-$CURL_VERSION
     cd curl-$CURL_VERSION
+    ./buildconf
     ./configure "$@" --disable-dict --disable-imap --disable-ldap --disable-ldaps --disable-pop3 --enable-proxy --disable-rtsp --disable-smtp \
         --disable-telnet --disable-tftp --without-libidn --without-ca-bundle --without-librtmp --without-libssh2 \
         --with-ssl=$INSTALLDIR --without-nss \
@@ -479,8 +500,8 @@ function build_suitesparse() {
     UMFPACK_MAJOR_VERSION=$(echo "$UMFPACK_VERSION" | awk -F \. {'print $1'})
     cd UMFPACK/Lib
     gcc -shared -Wl,-soname,libumfpack.so.${UMFPACK_MAJOR_VERSION} -o libumfpack.so.${UMFPACK_VERSION} `ls *.o` \
-      $INSTALLDIR/lib/libsuitesparseconfig.a $INSTALLDIR/lib/libscigfortran.a $INSTALLDIR/lib/libsciquadmath.a \
-      $INSTALLDIR/lib/libblas.so.3 $INSTALLDIR/lib/liblapack.so.3 -lm -lrt \
+      $INSTALLDIR/lib/libsuitesparseconfig.a $INSTALLDIR/lib/libscigfortran.so $INSTALLDIR/lib/libsciquadmath.a \
+      $INSTALLDIR/lib/libblas.so $INSTALLDIR/lib/liblapack.so -lm -lrt \
       $INSTALLDIR/lib/libcholmod.so.${CHOLMOD_VERSION} $INSTALLDIR/lib/libcolamd.so.${COLAMD_VERSION} \
       $INSTALLDIR/lib/libccolamd.so.${CCOLAMD_VERSION} $INSTALLDIR/lib/libcamd.so.${CAMD_VERSION}
     rm -f $INSTALLDIR/lib/libumfpack.so*
@@ -549,7 +570,7 @@ function build_jogl() {
 
 function clean_static() {
         rm -f $INSTALLDIR/lib/*.la # Avoid message about moved library while compiling
-        find $INSTALLDIR/lib \( -name '*.a' -or -name '*.a.*' \) -a -not \( -name 'libscigfortran.a' -o -name 'libsciquadmath.a'  \) -exec rm {} +
+        find $INSTALLDIR/lib \( -name '*.a' -or -name '*.a.*' \) -exec rm {} +
 }
 
 #########################
@@ -559,6 +580,9 @@ export CFLAGS="-O2 -g"
 export CXXFLAGS="-O2 -g"
 export FFLAGS="-O2 -g"
 export LDFLAGS="-O2 -g"
+export LDFLAGS="-O2 -g -L$INSTALLDIR/lib"
+export CPPFLAGS="-I$INSTALLDIR/include"
+export MAKEFLAGS=-j2
 
 ###################################
 ##### GIT CLONE CONFIGURATION #####
