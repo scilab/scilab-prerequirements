@@ -3,14 +3,14 @@
 
 General Information:
 -------------------
-		   HDF5 Version: 1.8.8
-		  Configured on: Wed Oct  1 14:30:22 CEST 2014
+		   HDF5 Version: 1.8.14
+		  Configured on: Mon Oct  1 18:02:10 CEST 2018
 		  Configured by: scilab@vmlinux32
 		 Configure mode: production
 		    Host system: i686-pc-linux-gnu
-	      Uname information: Linux vmlinux32 2.6.18-371.12.1.el5 #1 SMP Wed Sep 3 16:22:56 EDT 2014 i686 athlon i386 GNU/Linux
+	      Uname information: Linux vmlinux32 2.6.18-416.el5 #1 SMP Fri Oct 28 11:06:45 UTC 2016 i686 i686 i386 GNU/Linux
 		       Byte sex: little-endian
-		      Libraries: 
+		      Libraries: static, shared
 	     Installation point: 
 
 Compiling Options:
@@ -18,18 +18,18 @@ Compiling Options:
                Compilation Mode: production
                      C Compiler: /opt/rh/devtoolset-2/root/usr/bin//gcc ( gcc (GCC) 4.8.2 20140120 )
                          CFLAGS: -O2 -g
-                      H5_CFLAGS:   -ansi -pedantic -Wall -W -Wundef -Wshadow -Wpointer-arith -Wbad-function-cast -Wcast-qual -Wcast-align -Wwrite-strings -Wconversion -Waggregate-return -Wstrict-prototypes -Wmissing-prototypes -Wmissing-declarations -Wredundant-decls -Wnested-externs -Winline -O3 -fomit-frame-pointer -finline-functions
+                      H5_CFLAGS: -std=c99 -pedantic -Wall -Wextra -Wundef -Wshadow -Wpointer-arith -Wbad-function-cast -Wcast-qual -Wcast-align -Wwrite-strings -Wconversion -Waggregate-return -Wstrict-prototypes -Wmissing-prototypes -Wmissing-declarations -Wredundant-decls -Wnested-externs -Winline -Wfloat-equal -Wmissing-format-attribute -Wmissing-noreturn -Wpacked -Wdisabled-optimization -Wformat=2 -Wunreachable-code -Wendif-labels -Wdeclaration-after-statement -Wold-style-definition -Winvalid-pch -Wvariadic-macros -Winit-self -Wmissing-include-dirs -Wswitch-default -Wswitch-enum -Wunused-macros -Wunsafe-loop-optimizations -Wc++-compat -Wstrict-overflow -Wlogical-op -Wlarger-than=2048 -Wvla -Wsync-nand -Wframe-larger-than=16384 -Wpacked-bitfield-compat -Wstrict-overflow=5 -Wjump-misses-init -Wunsuffixed-float-constants -Wdouble-promotion -Wsuggest-attribute=const -Wtrampolines -Wstack-usage=8192 -Wvector-operation-performance -Wsuggest-attribute=pure -Wsuggest-attribute=noreturn -Wsuggest-attribute=format -O3 -fomit-frame-pointer -finline-functions
                       AM_CFLAGS: 
                        CPPFLAGS: 
                     H5_CPPFLAGS: -D_POSIX_C_SOURCE=199506L   -DNDEBUG -UH5_DEBUG_API
-                    AM_CPPFLAGS: -I/home/scilab/work/linux-prerequisites-sources/trunk/Dev-Tools/SE/Prerequirements/linux/usr/include -D_FILE_OFFSET_BITS=64 -D_LARGEFILE_SOURCE -D_LARGEFILE64_SOURCE -D_BSD_SOURCE 
+                    AM_CPPFLAGS: -I/home/scilab/work/Prerequirements/linux/usr/include -D_FILE_OFFSET_BITS=64 -D_LARGEFILE_SOURCE -D_LARGEFILE64_SOURCE -D_BSD_SOURCE 
                Shared C Library: yes
                Static C Library: yes
   Statically Linked Executables: no
-                        LDFLAGS: 
+                        LDFLAGS: -O2 -g
                      H5_LDFLAGS: 
-                     AM_LDFLAGS:  -L/home/scilab/work/linux-prerequisites-sources/trunk/Dev-Tools/SE/Prerequirements/linux/usr/lib
- 	 	Extra libraries:  -lz -lrt -lm 
+                     AM_LDFLAGS:  -L/lib -L/home/scilab/work/Prerequirements/linux/usr/lib
+ 	 	Extra libraries:  -lz -lrt -ldl -lm 
  		       Archiver: ar
  		 	 Ranlib: ranlib
  	      Debugged Packages: 
@@ -56,7 +56,6 @@ Features:
 Clear file buffers before write: yes
            Using memory checker: no
          Function Stack Tracing: no
-                           GPFS: no
       Strict File Format Checks: no
    Optimization Instrumentation: no
        Large File Support (LFS): yes

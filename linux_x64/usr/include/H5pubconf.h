@@ -1,5 +1,5 @@
 /* src/H5config.h.  Generated from H5config.h.in by configure.  */
-/* src/H5config.h.in.  Generated from configure.in by autoheader.  */
+/* src/H5config.h.in.  Generated from configure.ac by autoheader.  */
 
 /* Define if building universal (internal helper macro) */
 /* #undef H5_AC_APPLE_UNIVERSAL_BUILD */
@@ -16,11 +16,10 @@
 #define H5_CONVERT_DENORMAL_FLOAT 1
 
 /* Define if C++ compiler recognizes offsetof */
-/* #undef H5_CXX_HAVE_OFFSETOF */
+#define H5_CXX_HAVE_OFFSETOF 1
 
-/* Define a macro for Cygwin (on XP only) where the compiler has rounding
-   problem converting from unsigned long long to long double */
-/* #undef H5_CYGWIN_ULLONG_TO_LDOUBLE_ROUND_PROBLEM */
+/* Define the default plugins path to compile */
+#define H5_DEFAULT_PLUGINDIR "/usr/local/hdf5/lib/plugin"
 
 /* Define the default virtual file driver to compile */
 #define H5_DEFAULT_VFD H5FD_SEC2
@@ -60,6 +59,9 @@
 /* Define to 1 if you have the `alarm' function. */
 #define H5_HAVE_ALARM 1
 
+/* Define to 1 if you have the `asprintf' function. */
+#define H5_HAVE_ASPRINTF 1
+
 /* Define if the __attribute__(()) extension is present */
 #define H5_HAVE_ATTRIBUTE 1
 
@@ -79,6 +81,9 @@
 /* Define if the function stack tracing code is to be compiled in */
 /* #undef H5_HAVE_CODESTACK */
 
+/* Define if Darwin or Mac OS X */
+/* #undef H5_HAVE_DARWIN */
+
 /* Define to 1 if you have the declaration of `tzname', and to 0 if you don't.
    */
 /* #undef H5_HAVE_DECL_TZNAME */
@@ -88,6 +93,9 @@
 
 /* Define if the direct I/O virtual file driver should be compiled */
 /* #undef H5_HAVE_DIRECT */
+
+/* Define to 1 if you have the <dirent.h> header file. */
+#define H5_HAVE_DIRENT_H 1
 
 /* Define to 1 if you have the <dlfcn.h> header file. */
 #define H5_HAVE_DLFCN_H 1
@@ -170,12 +178,6 @@
 /* Define to 1 if you have the `get_fpc_csr' function. */
 /* #undef H5_HAVE_GET_FPC_CSR */
 
-/* Define if we have GPFS support */
-/* #undef H5_HAVE_GPFS */
-
-/* Define to 1 if you have the <gpfs.h> header file. */
-/* #undef H5_HAVE_GPFS_H */
-
 /* Define if library will contain instrumentation to detect correct
    optimization operation */
 /* #undef H5_HAVE_INSTRUMENTED_LIBRARY */
@@ -188,6 +190,9 @@
 
 /* Define to 1 if you have the <io.h> header file. */
 /* #undef H5_HAVE_IO_H */
+
+/* Define to 1 if you have the `dl' library (-ldl). */
+#define H5_HAVE_LIBDL 1
 
 /* Define to 1 if you have the `dmalloc' library (-ldmalloc). */
 /* #undef H5_HAVE_LIBDMALLOC */
@@ -222,6 +227,9 @@
 /* Define to 1 if you have the `sz' library (-lsz). */
 /* #undef H5_HAVE_LIBSZ */
 
+/* Define to 1 if you have the `ws2_32' library (-lws2_32). */
+/* #undef H5_HAVE_LIBWS2_32 */
+
 /* Define to 1 if you have the `z' library (-lz). */
 #define H5_HAVE_LIBZ 1
 
@@ -245,9 +253,6 @@
 
 /* Define to 1 if you have the <mpe.h> header file. */
 /* #undef H5_HAVE_MPE_H */
-
-/* Define if MPI_File_get_size works correctly */
-/* #undef H5_HAVE_MPI_GET_SIZE */
 
 /* Define if `MPI_Comm_c2f' and `MPI_Comm_f2c' exists */
 /* #undef H5_HAVE_MPI_MULTI_LANG_Comm */
@@ -410,8 +415,8 @@
 /* Define if your system has window style path name. */
 /* #undef H5_HAVE_WINDOW_PATH */
 
-/* Define to 1 if you have the <winsock.h> header file. */
-/* #undef H5_HAVE_WINSOCK_H */
+/* Define to 1 if you have the <winsock2.h> header file. */
+/* #undef H5_HAVE_WINSOCK2_H */
 
 /* Define to 1 if you have the <zlib.h> header file. */
 #define H5_HAVE_ZLIB_H 1
@@ -472,10 +477,6 @@
 /* Define if the metadata trace file code is to be compiled in */
 /* #undef H5_METADATA_TRACE_FILE */
 
-/* Define if your system's `MPI_File_set_size' function works for files over
-   2GB. */
-/* #undef H5_MPI_FILE_SET_SIZE_BIG */
-
 /* Define if we can violate pointer alignment restrictions */
 #define H5_NO_ALIGNMENT_RESTRICTIONS 1
 
@@ -495,7 +496,7 @@
 #define H5_PACKAGE_NAME "HDF5"
 
 /* Define to the full name and version of this package. */
-#define H5_PACKAGE_STRING "HDF5 1.8.8"
+#define H5_PACKAGE_STRING "HDF5 1.8.14"
 
 /* Define to the one symbol short name of this package. */
 #define H5_PACKAGE_TARNAME "hdf5"
@@ -504,7 +505,7 @@
 #define H5_PACKAGE_URL ""
 
 /* Define to the version of this package. */
-#define H5_PACKAGE_VERSION "1.8.8"
+#define H5_PACKAGE_VERSION "1.8.14"
 
 /* Width for printf() for type `long long' or `__int64', use `ll' */
 #define H5_PRINTF_LL_WIDTH "l"
@@ -667,7 +668,7 @@
 /* #undef H5_USING_MEMCHECKER */
 
 /* Version number of package */
-#define H5_VERSION "1.8.8"
+#define H5_VERSION "1.8.14"
 
 /* Define if vsnprintf() returns the correct value for formatted strings that
    don't fit into size allowed */
@@ -703,7 +704,7 @@
 /* Define to `__inline__' or `__inline' if that's what the C compiler
    calls it, or to nothing if 'inline' is not supported under any name.  */
 #ifndef __cplusplus
-#define H5_inline __inline__
+/* #undef H5_inline */
 #endif
 
 /* Define to `long int' if <sys/types.h> does not define. */

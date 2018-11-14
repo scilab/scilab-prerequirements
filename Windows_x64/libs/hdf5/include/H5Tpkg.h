@@ -508,6 +508,7 @@ H5FL_EXTERN(H5T_t);
 H5FL_EXTERN(H5T_shared_t);
 
 /* Common functions */
+H5_DLL herr_t H5T__term_deprec_interface(void);
 H5_DLL H5T_t *H5T__create(H5T_class_t type, size_t size);
 H5_DLL herr_t H5T__commit(H5F_t *file, H5T_t *type, hid_t tcpl_id, hid_t dxpl_id);
 H5_DLL herr_t H5T__commit_named(const H5G_loc_t *loc, const char *name,
@@ -541,6 +542,10 @@ H5_DLL herr_t H5T__conv_struct_opt(hid_t src_id, hid_t dst_id, H5T_cdata_t *cdat
                             size_t bkg_stride, void *_buf, void *bkg,
                             hid_t dset_xfer_plist);
 H5_DLL herr_t H5T__conv_enum(hid_t src_id, hid_t dst_id, H5T_cdata_t *cdata,
+			    size_t nelmts, size_t buf_stride,
+                            size_t bkg_stride, void *buf, void *bkg,
+                            hid_t dset_xfer_plist);
+H5_DLL herr_t H5T__conv_enum_numeric(hid_t src_id, hid_t dst_id, H5T_cdata_t *cdata,
 			    size_t nelmts, size_t buf_stride,
                             size_t bkg_stride, void *buf, void *bkg,
                             hid_t dset_xfer_plist);

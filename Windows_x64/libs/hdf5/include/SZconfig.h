@@ -13,7 +13,7 @@
 #define HAVE_FCNTL_H 1
 
 /* Define to 1 if you have the <inttypes.h> header file. */
-/* #undef HAVE_INTTYPES_H */
+#define HAVE_INTTYPES_H 1
 
 /* Define to 1 if you have the <memory.h> header file. */
 #define HAVE_MEMORY_H 1
@@ -74,3 +74,6 @@
 
 /* Define to `unsigned int' if <sys/types.h> does not define. */
 /* #undef size_t */
+
+/* Define if cmake is used and building dynamic libraries */
+#define SZ_BUILT_AS_DYNAMIC_LIB 1
