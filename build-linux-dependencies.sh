@@ -65,14 +65,14 @@ ATLAS_VERSION=3.10.2
 OPENBLAS_VERSION=0.2.20
 ANT_VERSION=1.9.4
 ARPACK_VERSION=3.1.5
-CURL_VERSION=7.43.0
+CURL_VERSION=7.64.1
 EIGEN_VERSION=3.3.2
 FFTW_VERSION=3.3.3
 HDF5_VERSION=1.8.14
 LIBXML2_VERSION=2.9.1
 MATIO_VERSION=1.5.2
 OCAML_VERSION=4.01.0
-OPENSSL_VERSION=0.9.8za
+OPENSSL_VERSION=1.1.1b
 OPENSSH_VERSION=7.5p1
 PCRE_VERSION=8.38
 SUITESPARSE_VERSION=4.4.5
@@ -86,7 +86,7 @@ FOP_VERSION=2.0
 
 ##### DOWNLOAD #####
 ####################
-function download_dependencies() {
+download_dependencies() {
     [ ! -e gcc-$GCC_VERSION.tar.gz ] && curl -L -o gcc-$GCC_VERSION.tar.gz  ftp://ftp.lip6.fr/pub/gcc/releases/gcc-$GCC_VERSION/gcc-$GCC_VERSION.tar.gz 
     [ ! -e apache-ant-$ANT_VERSION-bin.tar.gz ] && curl -L -o apache-ant-$ANT_VERSION-bin.tar.gz http://archive.apache.org/dist/ant/binaries/apache-ant-$ANT_VERSION-bin.tar.gz
     [ ! -e OpenBLAS-$OPENBLAS_VERSION.tar.gz ] && curl -L -o OpenBLAS-$OPENBLAS_VERSION.tar.gz https://github.com/xianyi/OpenBLAS/archive/v$OPENBLAS_VERSION.tar.gz
@@ -118,7 +118,7 @@ function download_dependencies() {
 ##### BUILDERS #####
 ####################
 
-function build_gcc() {
+build_gcc() {
 	[ -d gcc-$GCC_VERSION ] && rm -fr gcc-$GCC_VERSION
 
 	tar -xzf gcc-$GCC_VERSION.tar.gz
@@ -144,7 +144,7 @@ function build_gcc() {
 	cd ../..
 }
 
-function build_openblas() {
+build_openblas() {
     [ -d OpenBLAS-$OPENBLAS_VERSION ] && rm -fr OpenBLAS-$OPENBLAS_VERSION
 
     tar -xzf OpenBLAS-$OPENBLAS_VERSION.tar.gz
@@ -169,7 +169,7 @@ function build_openblas() {
     clean_static
 }
 
-function build_ant() {
+build_ant() {
     [ -d $INSTALLDIR/../java/ant ] && rm -fr $INSTALLDIR/../java/ant
     [ -d $INSTALLDIR/../java/apache-ant-$ANT_VERSION ] && rm -fr $INSTALLDIR/../java/apache-ant-$ANT_VERSION
 
@@ -179,7 +179,7 @@ function build_ant() {
     cd -
 }
 
-function build_arpack() {
+build_arpack() {
     [ -d arpack-ng-$ARPACK_VERSION ] && rm -fr arpack-ng-$ARPACK_VERSION
 
     tar -xzf arpack-ng-$ARPACK_VERSION.tar.gz
@@ -199,7 +199,7 @@ function build_arpack() {
     clean_static
 }
 
-function build_eigen() {
+build_eigen() {
     [ -d eigen-eigen* ] && rm -fr eigen-eigen*
 
     tar -zxf eigen-$EIGEN_VERSION.tar.gz
@@ -210,7 +210,7 @@ function build_eigen() {
 }
 
 
-function build_hdf5() {
+build_hdf5() {
     [ -d hdf5-$HDF5_VERSION ] && rm -fr hdf5-$HDF5_VERSION
 
     tar -xzf hdf5-$HDF5_VERSION.tar.gz
@@ -224,7 +224,7 @@ function build_hdf5() {
     clean_static
 }
 
-function build_fftw() {
+build_fftw() {
     [ -d fftw-$FFTW_VERSION ] && rm -fr fftw-$FFTW_VERSION
 
     tar -xzf fftw-$FFTW_VERSION.tar.gz
@@ -237,7 +237,7 @@ function build_fftw() {
     clean_static
 }
 
-function build_zlib() {
+build_zlib() {
     [ -d zlib-$ZLIB_VERSION ] && rm -fr zlib-$ZLIB_VERSION
 
     tar -xzf zlib-$ZLIB_VERSION.tar.gz
@@ -250,7 +250,7 @@ function build_zlib() {
     clean_static
 }
 
-function build_libpng() {
+build_libpng() {
     [ -d libpng-$PNG_VERSION ] && rm -fr libpng-$PNG_VERSION
 
     tar -xzf libpng-$PNG_VERSION.tar.gz
@@ -263,12 +263,12 @@ function build_libpng() {
     clean_static
 }
 
-function build_openssl() {
+build_openssl() {
     [ -d openssl-$OPENSSL_VERSION ] && rm -fr openssl-$OPENSSL_VERSION
 
     tar -xzf openssl-$OPENSSL_VERSION.tar.gz
     cd openssl-$OPENSSL_VERSION
-    ./config shared --openssldir=$INSTALLDIR
+    ./config shared --prefix=$INSTALLDIR --openssldir=$INSTALLDIR
     make depend all
     make install
     chmod 644 $INSTALLDIR/lib/libcrypto.*
@@ -278,7 +278,7 @@ function build_openssl() {
     clean_static
 }
 
-function build_openssh() {
+build_openssh() {
     [ -d openssh-$OPENSSH_VERSION ] && rm -fr openssh-$OPENSSH_VERSION
 
     tar -xzf openssh-$OPENSSH_VERSION.tar.gz
@@ -292,7 +292,7 @@ function build_openssh() {
 }
 
 
-function build_tcl() {
+build_tcl() {
     [ -d tcl$TCL_VERSION ] && rm -fr tcl$TCL_VERSION
 
     tar -xzf tcl$TCL_VERSION-src.tar.gz
@@ -306,7 +306,7 @@ function build_tcl() {
     clean_static
 }
 
-function build_tk() {
+build_tk() {
     [ -d tk$TK_VERSION ] && rm -fr tk$TK_VERSION
 
     tar -xzf tk$TK_VERSION-src.tar.gz
@@ -320,7 +320,7 @@ function build_tk() {
     clean_static
 }
 
-function build_matio() {
+build_matio() {
     [ -d matio-$MATIO_VERSION ] && rm -fr matio-$MATIO_VERSION
 
     tar -xzf matio-$MATIO_VERSION.tar.gz
@@ -333,7 +333,7 @@ function build_matio() {
     clean_static
 }
 
-function build_pcre() {
+build_pcre() {
     [ -d pcre-$PCRE_VERSION ] && rm -fr pcre-$PCRE_VERSION
 
     tar -xzf pcre-$PCRE_VERSION.tar.gz
@@ -347,7 +347,7 @@ function build_pcre() {
     clean_static
 }
 
-function build_libxml2() {
+build_libxml2() {
     [ -d libxml2-$LIBXML2_VERSION ] && rm -fr libxml2-$LIBXML2_VERSION
 
     tar -xzf libxml2-$LIBXML2_VERSION.tar.gz
@@ -361,17 +361,17 @@ function build_libxml2() {
     clean_static
 }
 
-function build_curl() {
+build_curl() {
     [ -d curl-$CURL_VERSION ] && rm -fr curl-$CURL_VERSION
 
     tar -zxf curl-$CURL_VERSION.tar.gz
     cd curl-$CURL_VERSION
-    ./configure "$@" --disable-dict --disable-imap --disable-ldap --disable-ldaps --disable-pop3 --enable-proxy --disable-rtsp --disable-smtp \
-        --disable-telnet --disable-tftp --without-libidn --without-ca-bundle --without-librtmp --without-libssh2 \
+    ./configure "$@" \
+	--without-ca-bundle --with-ca-fallback \
         --with-ssl=$INSTALLDIR --without-nss \
         --with-zlib=$INSTALLDIR \
         --prefix= \
-        CFLAGS="-O2 -g -DCURL_WANTS_CA_BUNDLE_ENV" # Used in SCI/modules/fileio/etc/fileio.start
+        CFLAGS="-O2 -g"
     make 
     make install DESTDIR=$INSTALLDIR
     cd -
@@ -380,7 +380,7 @@ function build_curl() {
     clean_static
 }
 
-function build_ocaml() {
+build_ocaml() {
     [ -d ocaml-$OCAML_VERSION ] && rm -fr ocaml-$OCAML_VERSION
 
     tar -zxf ocaml-$OCAML_VERSION.tar.gz
@@ -392,7 +392,7 @@ function build_ocaml() {
     echo "Do not forget to add $INSTALLDIR/bin/ to your PATH variable."
 }
 
-function build_suitesparse() {
+build_suitesparse() {
     [ -d SuiteSparse ] && rm -fr SuiteSparse
 
     tar -zxf SuiteSparse-$SUITESPARSE_VERSION.tar.gz
@@ -482,7 +482,7 @@ function build_suitesparse() {
     clean_static
 }
 
-function build_gluegen() {
+build_gluegen() {
     [ -d gluegen-v$JOGL_VERSION ] && rm -fr gluegen-v$JOGL_VERSION
     
     7za x gluegen-v$JOGL_VERSION.tar.7z
@@ -501,7 +501,7 @@ function build_gluegen() {
     clean_static
 }
 
-function build_jogl() {
+build_jogl() {
     [ -d jogl-v$JOGL_VERSION ] && rm -fr jogl-v$JOGL_VERSION
 
     7za x jogl-v$JOGL_VERSION.tar.7z
@@ -519,7 +519,7 @@ function build_jogl() {
     cp -a jogl-v$JOGL_VERSION/build/jogl.jar $INSTALLDIR/share/java
 }
 
-function clean_static() {
+clean_static() {
         rm -f $INSTALLDIR/lib/*.la # Avoid message about moved library while compiling
         find $INSTALLDIR/lib \( -name '*.a' -or -name '*.a.*' \) -a -not \( -name 'libscigfortran.a' -o -name 'libsciquadmath.a'  \) -exec rm {} +
 }
