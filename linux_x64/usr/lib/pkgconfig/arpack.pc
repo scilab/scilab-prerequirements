@@ -5,5 +5,5 @@ libdir=${exec_prefix}/lib
 Name: arpack
 Description: ARPACK-NG 
 Version: 3.1.5
-Libs: -L${libdir} -larpack -L/home/scilab/work/scilab-prerequirements/linux_x64/usr/lib/ -lblas -L/home/scilab/work/scilab-prerequirements/linux_x64/usr/lib/ -llapack -lblas
+Libs: -L${libdir} -larpack /home/buildscilab/work/scilab-prerequirements/linux_x64/usr/lib/libblas.so /home/buildscilab/work/scilab-prerequirements/linux_x64/usr/lib/liblapack.so
 Cflags: 

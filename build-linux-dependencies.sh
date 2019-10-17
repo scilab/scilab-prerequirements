@@ -47,6 +47,14 @@ echo "Scilab prerequirements for $(uname -s)-$(uname -m)"
 INSTALLDIR=$(pwd)/$SPECIFICDIR/usr
 DEVTOOLSDIR=$(pwd)/../../../../../Dev-Tools
 
+if [ "$MACHINE" = "i686" ]; then
+  USRDIR="/usr/lib"
+  LIBDIR="/lib"
+elif [ "$MACHINE" = "x86_64" ]; then
+  USRDIR="/usr/lib64"
+  LIBDIR="/lib64"
+fi
+
 echo
 echo "INSTALLDIR     = $INSTALLDIR"
 echo "DEVTOOLSDIR    = $DEVTOOLSDIR"
@@ -59,7 +67,7 @@ echo
 ################################
 ##### DEPENDENCIES VERSION #####
 ################################
-GCC_VERSION=4.8.2
+GCC_VERSION=8.3.0
 LAPACK_VERSION=3.6.0
 ATLAS_VERSION=3.10.2
 OPENBLAS_VERSION=0.2.20
@@ -72,7 +80,7 @@ HDF5_VERSION=1.8.14
 LIBXML2_VERSION=2.9.1
 MATIO_VERSION=1.5.2
 OCAML_VERSION=4.01.0
-OPENSSL_VERSION=1.1.1b
+OPENSSL_VERSION=1.1.1c
 OPENSSH_VERSION=7.5p1
 PCRE_VERSION=8.38
 SUITESPARSE_VERSION=4.4.5
@@ -81,8 +89,8 @@ TK_VERSION=8.5.15
 ZLIB_VERSION=1.2.8
 PNG_VERSION=1.6.34
 JOGL_VERSION=2.2.4
-
 FOP_VERSION=2.0
+OPENXLSX_VERSION=
 
 ##### DOWNLOAD #####
 ####################
@@ -99,7 +107,6 @@ download_dependencies() {
     [ ! -e matio-$MATIO_VERSION.tar.gz ] && curl -L -o matio-$MATIO_VERSION.tar.gz http://downloads.sourceforge.net/project/matio/matio/$MATIO_VERSION/matio-$MATIO_VERSION.tar.gz
     [ ! -e ocaml-$OCAML_VERSION.tar.gz ] && curl -L -o ocaml-$OCAML_VERSION.tar.gz http://caml.inria.fr/pub/distrib/ocaml-4.01/ocaml-$OCAML_VERSION.tar.gz
     [ ! -e openssl-$OPENSSL_VERSION.tar.gz ] && curl -L -o openssl-$OPENSSL_VERSION.tar.gz http://www.openssl.org/source/openssl-$OPENSSL_VERSION.tar.gz
-    [ ! -e openssh-$OPENSSH_VERSION.tar.gz ] && curl -L -o openssh-$OPENSSH_VERSION.tar.gz https://mirrors.ircam.fr/pub/OpenBSD/OpenSSH/portable/openssh-$OPENSSH_VERSION.tar.gz
     [ ! -e SuiteSparse-$SUITESPARSE_VERSION.tar.gz ] && curl -L -o SuiteSparse-$SUITESPARSE_VERSION.tar.gz http://faculty.cse.tamu.edu/davis/SuiteSparse/SuiteSparse-$SUITESPARSE_VERSION.tar.gz
     [ ! -e pcre-$PCRE_VERSION.tar.gz ] && curl -L -o pcre-$PCRE_VERSION.tar.gz https://ftp.pcre.org/pub/pcre/pcre-$PCRE_VERSION.tar.gz
     [ ! -e tcl$TCL_VERSION-src.tar.gz ] && curl -L -o tcl$TCL_VERSION-src.tar.gz http://prdownloads.sourceforge.net/tcl/tcl$TCL_VERSION-src.tar.gz
@@ -108,10 +115,10 @@ download_dependencies() {
     [ ! -e libpng-$PNG_VERSION.tar.gz ] && curl -L -o libpng-$PNG_VERSION.tar.gz http://prdownloads.sourceforge.net/libpng/libpng-$PNG_VERSION.tar.gz
     [ ! -e gluegen-v$JOGL_VERSION.tar.7z ] && curl -L -o gluegen-v$JOGL_VERSION.tar.7z https://jogamp.org/deployment/archive/rc/v$JOGL_VERSION/archive/Sources/gluegen-v$JOGL_VERSION.tar.7z
     [ ! -e jogl-v$JOGL_VERSION.tar.7z ] && curl -L -o jogl-v$JOGL_VERSION.tar.7z https://jogamp.org/deployment/archive/rc/v$JOGL_VERSION/archive/Sources/jogl-v$JOGL_VERSION.tar.7z
-
+    [ ! -d OpenXLSX ] && git clone git@github.com:troldal/OpenXLSX.git
     # xmlgraphics-commons is included within FOP
     # Batik is included within FOP
-    [ ! -e fop-$FOP_VERSION-bin.zip ] && curl -L -o fop-$FOP_VERSION-bin.zip http://wwwftp.ciril.fr/pub/apache/xmlgraphics/fop/binaries/fop-$FOP_VERSION-bin.zip
+    [ ! -e fop-$FOP_VERSION-bin.zip ] && curl -L -o fop-$FOP_VERSION-bin.zip http://apache.mediamirrors.org//xmlgraphics/fop/binaries/fop-$FOP_VERSION-bin.zip
 }
 
 ####################
@@ -119,29 +126,39 @@ download_dependencies() {
 ####################
 
 build_gcc() {
-	[ -d gcc-$GCC_VERSION ] && rm -fr gcc-$GCC_VERSION
+	PATH=~/bin/:/usr/bin:/bin
 
-	tar -xzf gcc-$GCC_VERSION.tar.gz
+	rm -fr gcc-$GCC_VERSION
+	if [ ! -d gcc-$GCC_VERSION ]; then
+		tar -xzf gcc-$GCC_VERSION.tar.gz
+		mkdir gcc-$GCC_VERSION/gcc-build
+	fi
+
 	cd gcc-$GCC_VERSION
-	./contrib/download_prerequisites
-	mkdir gcc-build
+	[ -h mpfr ] || ./contrib/download_prerequisites
+	
 	cd gcc-build
-	../configure --prefix= --enable-language=c,c++,fortran --disable-multilib
+	find -name config.cache -delete
+	../configure --prefix=$INSTALLDIR --enable-language=c,c++,fortran \
+                     --disable-multilib --disable-bootstrap
         make
+        make install
+
+	# cc bin is used by cmake
+	cp -af  $INSTALLDIR/bin/gcc $INSTALLDIR/bin/cc
 
         # NEEDED FOR CLEAN DEPENDENCIES
-	# enforce fPIC even for static libraries (to relink them to shared objects)
-        rm -f $MACHINE-*-linux-gnu/libquadmath/*.o $MACHINE-*-linux-gnu/libquadmath/*.lo
-        rm -f $MACHINE-*-linux-gnu/libquadmath/*/*.o $MACHINE-*-linux-gnu/libquadmath/*/*.lo
-	make -C $MACHINE-*-linux-gnu/libquadmath/ CFLAGS='-fPIC -fvisibility=hidden' FCFLAGS='-fPIC -fvisibility=hidden'
-
-        rm -f $MACHINE-*-linux-gnu/libgfortran/*.o $MACHINE-*-linux-gnu/libgfortran/*.lo
-	make -C $MACHINE-*-linux-gnu/libgfortran/ CFLAGS='-fPIC -fvisibility=hidden' FCFLAGS='-fPIC -fvisibility=hidden'
-        
-        # only install needed libraries
-        cp -a *-linux-gnu/libquadmath/.libs/libquadmath.a $INSTALLDIR/lib/libsciquadmath.a
-        cp -a *-linux-gnu/libgfortran/.libs/libgfortran.a $INSTALLDIR/lib/libscigfortran.a
-	cd ../..
+	# rename GCC library names to SCI ones to avoid dependency on system ones
+	patchelf --set-soname libsciquadmath.so.0 $INSTALLDIR$LIBDIR/libquadmath.so.0.0.0
+	cp -a $INSTALLDIR$LIBDIR/libquadmath.so.0.0.0 $INSTALLDIR/lib/libsciquadmath.so.0
+	patchelf --set-soname libscigfortran.so.5 $INSTALLDIR$LIBDIR/libgfortran.so.5.0.0
+	cp -a $INSTALLDIR$LIBDIR/libgfortran.so.5.0.0 $INSTALLDIR/lib/libscigfortran.so.5
+	patchelf --set-soname libscigcc_s.so.1 $INSTALLDIR$LIBDIR/libgcc_s.so.1
+	cp -a $INSTALLDIR$LIBDIR/libgcc_s.so.1 $INSTALLDIR/lib/libscigcc_s.so.1
+	patchelf --set-soname libscistdc++.so.6 $INSTALLDIR$LIBDIR/libstdc++.so.6.0.25
+	cp -a $INSTALLDIR$LIBDIR/libstdc++.so.6.0.25 $INSTALLDIR/lib/libscistdc++.so.6
+	
+        cd ../..
 }
 
 build_openblas() {
@@ -151,18 +168,16 @@ build_openblas() {
     cd OpenBLAS-$OPENBLAS_VERSION
     make TARGET=NEHALEM
 
-    # Relink to discard libgfortran.so dependency
-    gcc -shared -o $INSTALLDIR/lib/libopenblas.so.$OPENBLAS_VERSION -Wl,-soname,libopenblas.so.0 -Wl,--whole-archive libopenblas_nehalemp-r$OPENBLAS_VERSION.a -Wl,--no-whole-archive $INSTALLDIR/lib/libscigfortran.a $INSTALLDIR/lib/libsciquadmath.a -lm -lpthread
-    ln -fs libopenblas.so.$OPENBLAS_VERSION $INSTALLDIR/lib/libopenblas.so.0
-    ln -fs libopenblas.so.$OPENBLAS_VERSION $INSTALLDIR/lib/libopenblas.so
-    ln -fs libblas.so $INSTALLDIR/lib/libopenblas.so.0
-    ln -fs libopenblas.so.$OPENBLAS_VERSION $INSTALLDIR/lib/libopenblas.so.0
+    # install openblas for runtime usage
+    cp -a libopenblas_nehalemp-r$OPENBLAS_VERSION.so $INSTALLDIR/lib/libopenblas.so.$OPENBLAS_VERSION
 
     # BLAS and LAPACK libs
     # TODO: only export BLAS / LAPACK ABI
-    gcc -shared -o $INSTALLDIR/lib/libblas.so.3 -Wl,-soname,libblas.so.3 -Wl,--whole-archive libopenblas_nehalemp-r$OPENBLAS_VERSION.a -Wl,--no-whole-archive $INSTALLDIR/lib/libscigfortran.a $INSTALLDIR/lib/libsciquadmath.a -lm -lpthread
+    cp -a $INSTALLDIR/lib/libopenblas.so.$OPENBLAS_VERSION $INSTALLDIR/lib/libblas.so.3
+    patchelf --set-soname libblas.so.3 $INSTALLDIR/lib/libblas.so.3
     ln -fs libblas.so.3 $INSTALLDIR/lib/libblas.so
-    gcc -shared -o $INSTALLDIR/lib/liblapack.so.3 -Wl,-soname,liblapack.so.3 -Wl,--whole-archive libopenblas_nehalemp-r$OPENBLAS_VERSION.a -Wl,--no-whole-archive $INSTALLDIR/lib/libscigfortran.a $INSTALLDIR/lib/libsciquadmath.a -lm -lpthread
+    cp -a $INSTALLDIR/lib/libopenblas.so.$OPENBLAS_VERSION $INSTALLDIR/lib/liblapack.so.3
+    patchelf --set-soname liblapack.so.3 $INSTALLDIR/lib/liblapack.so.3
     ln -fs liblapack.so.3 $INSTALLDIR/lib/liblapack.so
     
     cd -
@@ -188,11 +203,7 @@ build_arpack() {
         --with-blas="$INSTALLDIR/lib/libblas.so" \
         --with-lapack="$INSTALLDIR/lib/liblapack.so"
     make
-
-    # Relink to discard libgfortran.so dependency
-    gcc -shared -o $INSTALLDIR/lib/libarpack.so.$ARPACK_VERSION -Wl,--whole-archive .libs/libarpack.a -Wl,--no-whole-archive -Wl,-soname,libarpack.so.3 $INSTALLDIR/lib/libscigfortran.a $INSTALLDIR/lib/libsciquadmath.a $INSTALLDIR/lib/libblas.so.3 $INSTALLDIR/lib/liblapack.so.3 -lm
-    ln -fs libarpack.so.$ARPACK_VERSION $INSTALLDIR/lib/libarpack.so.3
-    ln -fs libarpack.so.$ARPACK_VERSION $INSTALLDIR/lib/libarpack.so
+    make install DESTDIR=$INSTALLDIR
 
     cd -
 
@@ -270,22 +281,10 @@ build_openssl() {
     cd openssl-$OPENSSL_VERSION
     ./config shared --prefix=$INSTALLDIR --openssldir=$INSTALLDIR
     make depend all
-    make install
-    chmod 644 $INSTALLDIR/lib/libcrypto.*
-    chmod 644 $INSTALLDIR/lib/libssl.*
-    cd -
 
-    clean_static
-}
-
-build_openssh() {
-    [ -d openssh-$OPENSSH_VERSION ] && rm -fr openssh-$OPENSSH_VERSION
-
-    tar -xzf openssh-$OPENSSH_VERSION.tar.gz
-    cd openssh-$OPENSSH_VERSION
-    ./configure --prefix=$INSTALLDIR
-    make
-    make install
+    # install at the right location
+    cp -a -t $INSTALLDIR/lib/ libssl.so* libcrypto.so*
+    
     cd -
 
     clean_static
@@ -455,7 +454,8 @@ build_suitesparse() {
     UMFPACK_MAJOR_VERSION=$(echo "$UMFPACK_VERSION" | awk -F \. {'print $1'})
     cd UMFPACK/Lib
     gcc -shared -Wl,-soname,libumfpack.so.${UMFPACK_MAJOR_VERSION} -o libumfpack.so.${UMFPACK_VERSION} `ls *.o` \
-      $INSTALLDIR/lib/libsuitesparseconfig.a $INSTALLDIR/lib/libscigfortran.a $INSTALLDIR/lib/libsciquadmath.a \
+      $INSTALLDIR/lib/libsuitesparseconfig.a \
+      $INSTALLDIR/lib/libscigfortran.so.5 $INSTALLDIR/lib/libsciquadmath.so.0 \
       $INSTALLDIR/lib/libblas.so.3 $INSTALLDIR/lib/liblapack.so.3 -lm -lrt \
       $INSTALLDIR/lib/libcholmod.so.${CHOLMOD_VERSION} $INSTALLDIR/lib/libcolamd.so.${COLAMD_VERSION} \
       $INSTALLDIR/lib/libccolamd.so.${CCOLAMD_VERSION} $INSTALLDIR/lib/libcamd.so.${CAMD_VERSION}
@@ -519,9 +519,21 @@ build_jogl() {
     cp -a jogl-v$JOGL_VERSION/build/jogl.jar $INSTALLDIR/share/java
 }
 
+build_openxlsx() {
+    cd OpenXLSX
+    git clean -fXd OpenXLSX
+    
+    mkdir build && cd build
+    cmake ..
+    make
+
+    cp -a install/include/OpenXLSX $INSTALLDIR/include/
+    cp -a install/lib/libOpenXLSX.so $INSTALLDIR/lib/
+}
+
 clean_static() {
         rm -f $INSTALLDIR/lib/*.la # Avoid message about moved library while compiling
-        find $INSTALLDIR/lib \( -name '*.a' -or -name '*.a.*' \) -a -not \( -name 'libscigfortran.a' -o -name 'libsciquadmath.a'  \) -exec rm {} +
+        find $INSTALLDIR/lib \( -name '*.a' -or -name '*.a.*' \) -a -not -name 'libgcc.a' -exec rm {} +
 }
 
 #########################
@@ -598,11 +610,6 @@ do
       shift
       ;;
 
-    "gcc" | "openblas" | "ant" | "arpack" | "curl" | "eigen" | "fftw" | "hdf5" | "libxml2" | "matio" | "openssl" | "openssh" | "pcre" | "suitesparse" | "tcl" | "tk" | "zlib" | "libpng" | "gluegen" | "jogl" | "ocaml" )
-      build_$1
-      shift
-      ;;
-
     "binary")
       ########################
       ##### TCL/TK stuff #####
@@ -622,13 +629,6 @@ do
       #####################################
       ##### lib/thirdparty/ directory #####
       #####################################
-      if [ "$MACHINE" = "i686" ]; then
-        USRDIR="/usr/lib"
-        LIBDIR="/lib"
-      elif [ "$MACHINE" = "x86_64" ]; then
-        USRDIR="/usr/lib64"
-        LIBDIR="/lib64"
-      fi
 
       LIBTHIRDPARTYDIR=$INSTALLDIR/../lib/thirdparty
 
@@ -690,6 +690,8 @@ do
       rm -f $LIBTHIRDPARTYDIR/libcamd.*
       cp -d $INSTALLDIR/lib/libcamd.* $LIBTHIRDPARTYDIR/
 
+      rm -f $LIBTHIRDPARTYDIR/libOpenXLSX.*
+      cp -d $INSTALLDIR/lib/libOpenXLSX.* $LIBTHIRDPARTYDIR/
 
       # Scilab dependencies where the system ones are not recent enough to be used.
       #
@@ -709,10 +711,14 @@ do
       rm -f $LIBTHIRDPARTYDIR/libxml2.*
       cp -d $INSTALLDIR/lib/libxml2.* $LIBTHIRDPARTYDIR/redist/
 
-      # GCC libs could be there but are static linked into scilab libraries 
-      # instead.
-      # This avoid compilers (and support libraries) version mismatch between 
-      # gcc used here and user's gcc (probably more recent)
+      # GCC libs could be there but are prefixed with "sci" to avoid clashing
+      # system libraries static linked into scilab libraries instead.  This
+      # avoid compilers (and support libraries) version mismatch between gcc
+      # used here and user's gcc (probably more recent)
+      cp -d $INSTALLDIR/lib/libsciquadmath.so* $LIBTHIRDPARTYDIR/redist/
+      cp -d $INSTALLDIR/lib/libscigfortran.so* $LIBTHIRDPARTYDIR/redist/
+      cp -d $INSTALLDIR/lib/libscigcc_s.so* $LIBTHIRDPARTYDIR/redist/
+      cp -d $INSTALLDIR/lib/libscistdc++.so* $LIBTHIRDPARTYDIR/redist/
 
       # In case these libraries are not found on the system.
       #
@@ -724,9 +730,9 @@ do
       # libncurses.so.5
       rm -f $LIBTHIRDPARTYDIR/libncurses.*
       rm -f $LIBTHIRDPARTYDIR/redist/libncurses.*
-      cp -d $USRDIR/libncurses.so.5.5 $LIBTHIRDPARTYDIR/redist/
-      ln -fs libncurses.so.5.5 $LIBTHIRDPARTYDIR/redist/libncurses.so.5
-      ln -fs libncurses.so.5.5 $LIBTHIRDPARTYDIR/redist/libncurses.so
+      cp -d $LIBDIR/libncurses.so.5.7 $LIBTHIRDPARTYDIR/redist/
+      ln -fs libncurses.so.5.7 $LIBTHIRDPARTYDIR/redist/libncurses.so.5
+      ln -fs libncurses.so.5.7 $LIBTHIRDPARTYDIR/redist/libncurses.so
 
 
       # Strip libraries (exporting the debuginfo to another file) to
@@ -736,7 +742,7 @@ do
         [[ $file == *.debug ]] && continue
         objcopy --only-keep-debug $file $file.debug
         objcopy --strip-debug $file
-        objcopy --add-gnu-debuglink=$file.debug $file
+        objcopy --add-gnu-debuglink=$file.debug $file || true
       done
 
       shift
@@ -793,15 +799,21 @@ do
     build_tk
     build_matio
     build_openssl
-    build_openssh
     build_curl
+    build_OpenXLSX
 
     exit 0;
     ;;
 
   *)
-    echo "Unknown dependency name $DEPENDENCY"
-    exit 42
+    # Call the build_$1 function if there is one
+    declare -f -F build_$1 >/dev/null
+    if [ $? -eq 1 ]; then
+        echo "Unknown dependency name $DEPENDENCY"
+        exit 42
+    fi
+    build_$1
+    shift;
     ;;
 esac
 done

@@ -79,7 +79,7 @@ TCL_DL_LIBS='-ldl'
 
 # Flags to pass to the compiler when linking object files into
 # an executable tclsh or tcltest binary.
-TCL_LD_FLAGS=' -Wl,--export-dynamic '
+TCL_LD_FLAGS='-O2 -g -Wl,--export-dynamic '
 
 # Flags to pass to ld, such as "-R /usr/local/tcl/lib", that tell the
 # run-time dynamic linker where to look for shared libraries such as
@@ -100,7 +100,7 @@ TCL_LIB_FLAG='-ltcl8.5'
 
 # String to pass to linker to pick up the Tcl library from its
 # build directory.
-TCL_BUILD_LIB_SPEC='-L/home/scilab/work/linux-prerequisites-sources/trunk/Dev-Tools/SE/Prerequirements/tcl8.5.15/unix -ltcl8.5'
+TCL_BUILD_LIB_SPEC='-L/home/buildscilab/work/scilab-prerequirements/tcl8.5.15/unix -ltcl8.5'
 
 # String to pass to linker to pick up the Tcl library from its
 # installed directory.
@@ -135,7 +135,7 @@ TCL_UNSHARED_LIB_SUFFIX='${VERSION}.a'
 # different place than the directory containing the source files, this
 # points to the location of the sources, not the location where Tcl was
 # compiled.
-TCL_SRC_DIR='/home/scilab/work/linux-prerequisites-sources/trunk/Dev-Tools/SE/Prerequirements/tcl8.5.15'
+TCL_SRC_DIR='/home/buildscilab/work/scilab-prerequirements/tcl8.5.15'
 
 # List of standard directories in which to look for packages during
 # "package require" commands.  Contains the "prefix" directory plus also
@@ -153,14 +153,14 @@ TCL_STUB_LIB_FLAG='-ltclstub8.5'
 
 # String to pass to linker to pick up the Tcl stub library from its
 # build directory.
-TCL_BUILD_STUB_LIB_SPEC='-L/home/scilab/work/linux-prerequisites-sources/trunk/Dev-Tools/SE/Prerequirements/tcl8.5.15/unix -ltclstub8.5'
+TCL_BUILD_STUB_LIB_SPEC='-L/home/buildscilab/work/scilab-prerequirements/tcl8.5.15/unix -ltclstub8.5'
 
 # String to pass to linker to pick up the Tcl stub library from its
 # installed directory.
 TCL_STUB_LIB_SPEC='-L/lib -ltclstub8.5'
 
 # Path to the Tcl stub library in the build directory.
-TCL_BUILD_STUB_LIB_PATH='/home/scilab/work/linux-prerequisites-sources/trunk/Dev-Tools/SE/Prerequirements/tcl8.5.15/unix/libtclstub8.5.a'
+TCL_BUILD_STUB_LIB_PATH='/home/buildscilab/work/scilab-prerequirements/tcl8.5.15/unix/libtclstub8.5.a'
 
 # Path to the Tcl stub library in the install directory.
 TCL_STUB_LIB_PATH='/lib/libtclstub8.5.a'
