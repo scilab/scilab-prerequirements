@@ -68,6 +68,7 @@ echo
 ##### DEPENDENCIES VERSION #####
 ################################
 GCC_VERSION=8.3.0
+OCAML_VERSION=4.07.1
 LAPACK_VERSION=3.6.0
 ATLAS_VERSION=3.10.2
 OPENBLAS_VERSION=0.2.20
@@ -96,6 +97,7 @@ OPENXLSX_VERSION=
 ####################
 download_dependencies() {
     [ ! -e gcc-$GCC_VERSION.tar.gz ] && curl -L -o gcc-$GCC_VERSION.tar.gz  ftp://ftp.lip6.fr/pub/gcc/releases/gcc-$GCC_VERSION/gcc-$GCC_VERSION.tar.gz 
+    [ ! -e ocaml-$OCAML_VERSION.tar.gz ] && curl -L -o ocaml-$OCAML_VERSION.tar.gz http://caml.inria.fr/pub/distrib/ocaml-4.07/ocaml-$OCAML_VERSION.tar.gz 
     [ ! -e apache-ant-$ANT_VERSION-bin.tar.gz ] && curl -L -o apache-ant-$ANT_VERSION-bin.tar.gz http://archive.apache.org/dist/ant/binaries/apache-ant-$ANT_VERSION-bin.tar.gz
     [ ! -e OpenBLAS-$OPENBLAS_VERSION.tar.gz ] && curl -L -o OpenBLAS-$OPENBLAS_VERSION.tar.gz https://github.com/xianyi/OpenBLAS/archive/v$OPENBLAS_VERSION.tar.gz
     [ ! -e arpack-ng-$ARPACK_VERSION.tar.gz ] && curl -L -o arpack-ng-$ARPACK_VERSION.tar.gz https://github.com/opencollab/arpack-ng/archive/$ARPACK_VERSION.tar.gz
@@ -159,6 +161,18 @@ build_gcc() {
 	cp -a $INSTALLDIR$LIBDIR/libstdc++.so.6.0.25 $INSTALLDIR/lib/libscistdc++.so.6
 	
         cd ../..
+}
+
+build_ocaml() {
+    [ -d ocaml-$OCAML_VERSION ] && rm -fr ocaml-$OCAML_VERSION
+
+    tar -xzf ocaml-$OCAML_VERSION.tar.gz
+    cd ocaml-$OCAML_VERSION
+    ./configure
+    make
+
+    cd -
+    clean_static
 }
 
 build_openblas() {
