@@ -3,33 +3,33 @@
 
 General Information:
 -------------------
-		   HDF5 Version: 1.8.8
-		  Configured on: Wed Oct  1 14:24:02 CEST 2014
-		  Configured by: scilab@vmlinux64
+		   HDF5 Version: 1.8.14
+		  Configured on: Fri Oct  4 11:01:25 CEST 2019
+		  Configured by: buildscilab@bruvwo033.esi-group.com
 		 Configure mode: production
 		    Host system: x86_64-unknown-linux-gnu
-	      Uname information: Linux vmlinux64 2.6.18-371.12.1.el5 #1 SMP Wed Sep 3 16:22:34 EDT 2014 x86_64 x86_64 x86_64 GNU/Linux
+	      Uname information: Linux bruvwo033.esi-group.com 2.6.32-696.1.1.el6.x86_64 #1 SMP Tue Apr 11 17:13:24 UTC 2017 x86_64 x86_64 x86_64 GNU/Linux
 		       Byte sex: little-endian
-		      Libraries: 
+		      Libraries: static, shared
 	     Installation point: 
 
 Compiling Options:
 ------------------
                Compilation Mode: production
-                     C Compiler: /opt/rh/devtoolset-2/root/usr/bin//gcc ( gcc (GCC) 4.8.2 20140120 )
+                     C Compiler: /usr/lib64/ccache/gcc ( gcc (GCC) 8.3.0)
                          CFLAGS: -O2 -g
-                      H5_CFLAGS:   -ansi -pedantic -Wall -W -Wundef -Wshadow -Wpointer-arith -Wbad-function-cast -Wcast-qual -Wcast-align -Wwrite-strings -Wconversion -Waggregate-return -Wstrict-prototypes -Wmissing-prototypes -Wmissing-declarations -Wredundant-decls -Wnested-externs -Winline -O3 -fomit-frame-pointer -finline-functions
+                      H5_CFLAGS:   -ansi -pedantic -Wall -W -Wundef -Wshadow -Wpointer-arith -Wbad-function-cast -Wcast-qual -Wcast-align -Wwrite-strings -Wconversion -Waggregate-return -Wstrict-prototypes -Wmissing-prototypes -Wmissing-declarations -Wredundant-decls -Wnested-externs -Winline -O -fomit-frame-pointer -finline-functions
                       AM_CFLAGS: 
                        CPPFLAGS: 
                     H5_CPPFLAGS: -D_POSIX_C_SOURCE=199506L   -DNDEBUG -UH5_DEBUG_API
-                    AM_CPPFLAGS: -I/home/scilab/work/linux-prerequisites-sources/trunk/Dev-Tools/SE/Prerequirements/linux_x64/usr/include -D_LARGEFILE_SOURCE -D_LARGEFILE64_SOURCE -D_BSD_SOURCE 
+                    AM_CPPFLAGS: -I/home/buildscilab/work/scilab-prerequirements/linux_x64/usr/include -D_LARGEFILE_SOURCE -D_LARGEFILE64_SOURCE -D_BSD_SOURCE 
                Shared C Library: yes
                Static C Library: yes
   Statically Linked Executables: no
-                        LDFLAGS: 
+                        LDFLAGS: -O2 -g
                      H5_LDFLAGS: 
-                     AM_LDFLAGS:  -L/home/scilab/work/linux-prerequisites-sources/trunk/Dev-Tools/SE/Prerequirements/linux_x64/usr/lib
- 	 	Extra libraries:  -lz -lrt -lm 
+                     AM_LDFLAGS:  -L/lib -L/home/buildscilab/work/scilab-prerequirements/linux_x64/usr/lib
+ 	 	Extra libraries:  -lz -lrt -ldl -lm 
  		       Archiver: ar
  		 	 Ranlib: ranlib
  	      Debugged Packages: 
@@ -39,7 +39,13 @@ Languages:
 ----------
                         Fortran: no
 
-                            C++: no
+                            C++: yes
+                   C++ Compiler: /usr/lib64/ccache/g++ ( g++ (GCC) 8.3.0)
+                      C++ Flags: -O2 -g
+                   H5 C++ Flags:  
+                   AM C++ Flags: 
+             Shared C++ Library: yes
+             Static C++ Library: yes
 
 Features:
 ---------
@@ -56,7 +62,6 @@ Features:
 Clear file buffers before write: yes
            Using memory checker: no
          Function Stack Tracing: no
-                           GPFS: no
       Strict File Format Checks: no
    Optimization Instrumentation: no
        Large File Support (LFS): yes
