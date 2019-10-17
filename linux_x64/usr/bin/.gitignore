@@ -1,0 +1,6 @@
+# Ignore everything all but some files
+
+*
+!.gitignore
+!*config
+
