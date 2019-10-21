@@ -10,7 +10,6 @@ if test $# -eq 0; then
     echo " - 'versions': display versions of dependencies,"
     echo " - 'download': download all dependencies,"
     echo " - 'all': compile all dependencies,"
-    echo " - 'ocaml': compile Ocaml compiler and install it in $HOME/ocaml/,"
     echo " - 'binary': configure dev-tools for binary version of Scilab,"
     echo " - 'jar': configure JARs for binary version of Scilab,"
     echo " - 'fromscratch': 'init' + 'download' + 'all' + 'binary',"
@@ -80,7 +79,6 @@ FFTW_VERSION=3.3.3
 HDF5_VERSION=1.8.14
 LIBXML2_VERSION=2.9.1
 MATIO_VERSION=1.5.2
-OCAML_VERSION=4.01.0
 OPENSSL_VERSION=1.1.1c
 OPENSSH_VERSION=7.5p1
 PCRE_VERSION=8.38
@@ -97,7 +95,6 @@ OPENXLSX_VERSION=
 ####################
 download_dependencies() {
     [ ! -e gcc-$GCC_VERSION.tar.gz ] && curl -L -o gcc-$GCC_VERSION.tar.gz  ftp://ftp.lip6.fr/pub/gcc/releases/gcc-$GCC_VERSION/gcc-$GCC_VERSION.tar.gz 
-    [ ! -e ocaml-$OCAML_VERSION.tar.gz ] && curl -L -o ocaml-$OCAML_VERSION.tar.gz http://caml.inria.fr/pub/distrib/ocaml-4.07/ocaml-$OCAML_VERSION.tar.gz 
     [ ! -e apache-ant-$ANT_VERSION-bin.tar.gz ] && curl -L -o apache-ant-$ANT_VERSION-bin.tar.gz http://archive.apache.org/dist/ant/binaries/apache-ant-$ANT_VERSION-bin.tar.gz
     [ ! -e OpenBLAS-$OPENBLAS_VERSION.tar.gz ] && curl -L -o OpenBLAS-$OPENBLAS_VERSION.tar.gz https://github.com/xianyi/OpenBLAS/archive/v$OPENBLAS_VERSION.tar.gz
     [ ! -e arpack-ng-$ARPACK_VERSION.tar.gz ] && curl -L -o arpack-ng-$ARPACK_VERSION.tar.gz https://github.com/opencollab/arpack-ng/archive/$ARPACK_VERSION.tar.gz
@@ -107,7 +104,7 @@ download_dependencies() {
     [ ! -e hdf5-$HDF5_VERSION.tar.gz ] && curl -L -o hdf5-$HDF5_VERSION.tar.gz https://support.hdfgroup.org/ftp/HDF5/releases/hdf5-1.8/hdf5-$HDF5_VERSION/src/hdf5-$HDF5_VERSION.tar.gz
     [ ! -e libxml2-$LIBXML2_VERSION.tar.gz ] && curl -L -o libxml2-$LIBXML2_VERSION.tar.gz http://xmlsoft.org/sources/libxml2-$LIBXML2_VERSION.tar.gz
     [ ! -e matio-$MATIO_VERSION.tar.gz ] && curl -L -o matio-$MATIO_VERSION.tar.gz http://downloads.sourceforge.net/project/matio/matio/$MATIO_VERSION/matio-$MATIO_VERSION.tar.gz
-    [ ! -e ocaml-$OCAML_VERSION.tar.gz ] && curl -L -o ocaml-$OCAML_VERSION.tar.gz http://caml.inria.fr/pub/distrib/ocaml-4.01/ocaml-$OCAML_VERSION.tar.gz
+    [ ! -e ocaml-$OCAML_VERSION.tar.gz ] && curl -L -o ocaml-$OCAML_VERSION.tar.gz http://caml.inria.fr/pub/distrib/ocaml-4.07/ocaml-$OCAML_VERSION.tar.gz
     [ ! -e openssl-$OPENSSL_VERSION.tar.gz ] && curl -L -o openssl-$OPENSSL_VERSION.tar.gz http://www.openssl.org/source/openssl-$OPENSSL_VERSION.tar.gz
     [ ! -e SuiteSparse-$SUITESPARSE_VERSION.tar.gz ] && curl -L -o SuiteSparse-$SUITESPARSE_VERSION.tar.gz http://faculty.cse.tamu.edu/davis/SuiteSparse/SuiteSparse-$SUITESPARSE_VERSION.tar.gz
     [ ! -e pcre-$PCRE_VERSION.tar.gz ] && curl -L -o pcre-$PCRE_VERSION.tar.gz https://ftp.pcre.org/pub/pcre/pcre-$PCRE_VERSION.tar.gz
@@ -161,18 +158,6 @@ build_gcc() {
 	cp -a $INSTALLDIR$LIBDIR/libstdc++.so.6.0.25 $INSTALLDIR/lib/libscistdc++.so.6
 	
         cd ../..
-}
-
-build_ocaml() {
-    [ -d ocaml-$OCAML_VERSION ] && rm -fr ocaml-$OCAML_VERSION
-
-    tar -xzf ocaml-$OCAML_VERSION.tar.gz
-    cd ocaml-$OCAML_VERSION
-    ./configure
-    make
-
-    cd -
-    clean_static
 }
 
 build_openblas() {
@@ -236,7 +221,6 @@ build_eigen() {
     cp -a Eigen $INSTALLDIR/include/
     cd -
 }
-
 
 build_hdf5() {
     [ -d hdf5-$HDF5_VERSION ] && rm -fr hdf5-$HDF5_VERSION
