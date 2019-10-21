@@ -213,13 +213,16 @@ build_arpack() {
 
     tar -xzf arpack-ng-$ARPACK_VERSION.tar.gz
     cd arpack-ng-$ARPACK_VERSION
-    ./configure "$@" --prefix= \
+    ./configure "$@" --prefix=  F77=gfortran \
         --with-blas="$INSTALLDIR/lib/libblas.so" \
         --with-lapack="$INSTALLDIR/lib/liblapack.so"
     make
     make install DESTDIR=$INSTALLDIR
 
     cd -
+
+    # remove gfortran stdlibs as they are provided as sci prefixed
+    patchelf --remove-needed libquadmath.so.0 $INSTALLDIR/lib/libarpack.so
 
     clean_static
 }
