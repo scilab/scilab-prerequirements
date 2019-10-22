@@ -262,7 +262,9 @@ build_zlib() {
     # Rename libz to scilibz
     mv $INSTALLDIR/lib/libz.so.$ZLIB_VERSION $INSTALLDIR/lib/libsciz.so.$ZLIB_VERSION
     ln -sf libsciz.so.$ZLIB_VERSION $INSTALLDIR/lib/libz.so
-    ln -sf libsciz.so.$ZLIB_VERSION $INSTALLDIR/lib/libz.so.1
+    rm  $INSTALLDIR/lib/libz.so.*
+    ln -sf libsciz.so.$ZLIB_VERSION $INSTALLDIR/lib/libsciz.so
+    ln -sf libsciz.so.$ZLIB_VERSION $INSTALLDIR/lib/libsciz.so.1
     patchelf --set-soname libsciz.so.1 $INSTALLDIR/lib/libsciz.so.$ZLIB_VERSION
 
     clean_static
@@ -274,7 +276,7 @@ build_libpng() {
     tar -xzf libpng-$PNG_VERSION.tar.gz
     cd libpng-$PNG_VERSION
     ./configure "$@" --prefix= LDFLAGS="-L$INSTALLDIR/lib" CPPFLAGS="-I$INSTALLDIR/include"
-    make LDFLAGS="-L$INSTALLDIR/lib" CPPFLAGS="-I$INSTALLDIR/include"
+    make LDFLAGS="-L$INSTALLDIR/lib -lsciz" CPPFLAGS="-I$INSTALLDIR/include"
     make install DESTDIR=$INSTALLDIR
     cd -
 
@@ -367,7 +369,9 @@ build_libxml2() {
     # Rename xml2 to scixml2
     mv $INSTALLDIR/lib/libxml2.so.$LIBXML2_VERSION $INSTALLDIR/lib/libscixml2.so.$LIBXML2_VERSION
     ln -sf libscixml2.so.$LIBXML2_VERSION $INSTALLDIR/lib/libxml2.so
-    ln -sf libscixml2.so.$LIBXML2_VERSION $INSTALLDIR/lib/libxml2.so.2
+    rm $INSTALLDIR/lib/libxml2.so.*
+    ln -sf libscixml2.so.$LIBXML2_VERSION $INSTALLDIR/lib/libscixml2.so
+    ln -sf libscixml2.so.$LIBXML2_VERSION $INSTALLDIR/lib/libscixml2.so.2
     patchelf --set-soname libscixml2.so.2 $INSTALLDIR/lib/libscixml2.so.$LIBXML2_VERSION
 
     clean_static
@@ -713,9 +717,8 @@ do
 
       rm -fr $LIBTHIRDPARTYDIR/redist && mkdir $LIBTHIRDPARTYDIR/redist/
 
-      rm -f $LIBTHIRDPARTYDIR/libz.*
-      rm -f $LIBTHIRDPARTYDIR/redist/libz.*
-      cp -d $INSTALLDIR/lib/libz.* $LIBTHIRDPARTYDIR/redist/
+      rm -f $LIBTHIRDPARTYDIR/libz.* $LIBTHIRDPARTYDIR/libsciz.*
+      rm -f $LIBTHIRDPARTYDIR/redist/libz.* $LIBTHIRDPARTYDIR/redist/libsciz.*
       cp -d $INSTALLDIR/lib/libsciz.* $LIBTHIRDPARTYDIR/redist/
 
       rm -f $LIBTHIRDPARTYDIR/libpng*
@@ -723,8 +726,8 @@ do
       # do not re-ship libpng16 it is now present on most machines
       # cp -d $INSTALLDIR/lib/libpng* $LIBTHIRDPARTYDIR/redist/
 
-      rm -f $LIBTHIRDPARTYDIR/libxml2.*
-      cp -d $INSTALLDIR/lib/libxml2.* $LIBTHIRDPARTYDIR/redist/
+      rm -f $LIBTHIRDPARTYDIR/libxml2.* $LIBTHIRDPARTYDIR/libscixml2.*
+      rm -f $LIBTHIRDPARTYDIR/redist/libxml2.* $LIBTHIRDPARTYDIR/redist/libscixml2.*
       cp -d $INSTALLDIR/lib/libscixml2.* $LIBTHIRDPARTYDIR/redist/
 
       # GCC libs could be there but are prefixed with "sci" to avoid clashing
