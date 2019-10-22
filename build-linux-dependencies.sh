@@ -77,7 +77,7 @@ CURL_VERSION=7.64.1
 EIGEN_VERSION=3.3.2
 FFTW_VERSION=3.3.3
 HDF5_VERSION=1.8.14
-LIBXML2_VERSION=2.9.1
+LIBXML2_VERSION=2.9.9
 MATIO_VERSION=1.5.2
 OPENSSL_VERSION=1.1.1c
 OPENSSH_VERSION=7.5p1
@@ -85,8 +85,8 @@ PCRE_VERSION=8.38
 SUITESPARSE_VERSION=4.4.5
 TCL_VERSION=8.5.15
 TK_VERSION=8.5.15
-ZLIB_VERSION=1.2.8
-PNG_VERSION=1.6.34
+ZLIB_VERSION=1.2.11
+PNG_VERSION=1.6.37
 JOGL_VERSION=2.2.4
 FOP_VERSION=2.0
 OPENXLSX_VERSION=
@@ -259,6 +259,12 @@ build_zlib() {
     make install DESTDIR=$INSTALLDIR
     cd -
 
+    # Rename libz to scilibz
+    mv $INSTALLDIR/lib/libz.so.$ZLIB_VERSION $INSTALLDIR/lib/libscilibz.so.$ZLIB_VERSION
+    ln -sf libscilibz.so.$ZLIB_VERSION $INSTALLDIR/lib/libz.so
+    ln -sf libscilibz.so.$ZLIB_VERSION $INSTALLDIR/lib/libz.so.1
+    patchelf --set-soname libscilibz.so.1 $INSTALLDIR/lib/libscilibz.so.$ZLIB_VERSION
+
     clean_static
 }
 
@@ -357,6 +363,12 @@ build_libxml2() {
     make install DESTDIR=$INSTALLDIR
     cd -
     sed -i -e 's|^\prefix=.*|\prefix=`pwd`'"/usr|" $INSTALLDIR/bin/xml2-config
+
+    # Rename xml2 to scixml2
+    mv $INSTALLDIR/lib/libxml2.so.$LIBXML2_VERSION $INSTALLDIR/lib/libscixml2.so.$LIBXML2_VERSION
+    ln -sf libscixml2.so.$LIBXML2_VERSION $INSTALLDIR/lib/libxml2.so
+    ln -sf libscixml2.so.$LIBXML2_VERSION $INSTALLDIR/lib/libxml2.so.2
+    patchelf --set-soname libscixml2.so.2 $INSTALLDIR/lib/libscixml2.so.$LIBXML2_VERSION
 
     clean_static
 }
@@ -707,7 +719,8 @@ do
 
       rm -f $LIBTHIRDPARTYDIR/libpng*
       rm -f $LIBTHIRDPARTYDIR/redist/libpng*
-      cp -d $INSTALLDIR/lib/libpng* $LIBTHIRDPARTYDIR/redist/
+      # do not re-ship libpng16 it is now present on most machines
+      # cp -d $INSTALLDIR/lib/libpng* $LIBTHIRDPARTYDIR/redist/
 
       rm -f $LIBTHIRDPARTYDIR/libxml2.*
       cp -d $INSTALLDIR/lib/libxml2.* $LIBTHIRDPARTYDIR/redist/
@@ -716,10 +729,10 @@ do
       # system libraries static linked into scilab libraries instead.  This
       # avoid compilers (and support libraries) version mismatch between gcc
       # used here and user's gcc (probably more recent)
-      cp -d $INSTALLDIR/lib/libsciquadmath.so* $LIBTHIRDPARTYDIR/redist/
-      cp -d $INSTALLDIR/lib/libscigfortran.so* $LIBTHIRDPARTYDIR/redist/
-      cp -d $INSTALLDIR/lib/libscigcc_s.so* $LIBTHIRDPARTYDIR/redist/
-      cp -d $INSTALLDIR/lib/libscistdc++.so* $LIBTHIRDPARTYDIR/redist/
+      cp -d $INSTALLDIR/lib/libsciquadmath.so* $LIBTHIRDPARTYDIR/
+      cp -d $INSTALLDIR/lib/libscigfortran.so* $LIBTHIRDPARTYDIR/
+      cp -d $INSTALLDIR/lib/libscigcc_s.so* $LIBTHIRDPARTYDIR/
+      cp -d $INSTALLDIR/lib/libscistdc++.so* $LIBTHIRDPARTYDIR/
 
       # In case these libraries are not found on the system.
       #
