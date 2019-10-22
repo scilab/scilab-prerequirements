@@ -260,10 +260,10 @@ build_zlib() {
     cd -
 
     # Rename libz to scilibz
-    mv $INSTALLDIR/lib/libz.so.$ZLIB_VERSION $INSTALLDIR/lib/libscilibz.so.$ZLIB_VERSION
-    ln -sf libscilibz.so.$ZLIB_VERSION $INSTALLDIR/lib/libz.so
-    ln -sf libscilibz.so.$ZLIB_VERSION $INSTALLDIR/lib/libz.so.1
-    patchelf --set-soname libscilibz.so.1 $INSTALLDIR/lib/libscilibz.so.$ZLIB_VERSION
+    mv $INSTALLDIR/lib/libz.so.$ZLIB_VERSION $INSTALLDIR/lib/libsciz.so.$ZLIB_VERSION
+    ln -sf libsciz.so.$ZLIB_VERSION $INSTALLDIR/lib/libz.so
+    ln -sf libsciz.so.$ZLIB_VERSION $INSTALLDIR/lib/libz.so.1
+    patchelf --set-soname libsciz.so.1 $INSTALLDIR/lib/libsciz.so.$ZLIB_VERSION
 
     clean_static
 }
@@ -716,6 +716,7 @@ do
       rm -f $LIBTHIRDPARTYDIR/libz.*
       rm -f $LIBTHIRDPARTYDIR/redist/libz.*
       cp -d $INSTALLDIR/lib/libz.* $LIBTHIRDPARTYDIR/redist/
+      cp -d $INSTALLDIR/lib/libsciz.* $LIBTHIRDPARTYDIR/redist/
 
       rm -f $LIBTHIRDPARTYDIR/libpng*
       rm -f $LIBTHIRDPARTYDIR/redist/libpng*
@@ -724,15 +725,16 @@ do
 
       rm -f $LIBTHIRDPARTYDIR/libxml2.*
       cp -d $INSTALLDIR/lib/libxml2.* $LIBTHIRDPARTYDIR/redist/
+      cp -d $INSTALLDIR/lib/libscixml2.* $LIBTHIRDPARTYDIR/redist/
 
       # GCC libs could be there but are prefixed with "sci" to avoid clashing
       # system libraries static linked into scilab libraries instead.  This
       # avoid compilers (and support libraries) version mismatch between gcc
       # used here and user's gcc (probably more recent)
-      cp -d $INSTALLDIR/lib/libsciquadmath.so* $LIBTHIRDPARTYDIR/
-      cp -d $INSTALLDIR/lib/libscigfortran.so* $LIBTHIRDPARTYDIR/
-      cp -d $INSTALLDIR/lib/libscigcc_s.so* $LIBTHIRDPARTYDIR/
-      cp -d $INSTALLDIR/lib/libscistdc++.so* $LIBTHIRDPARTYDIR/
+      cp -d $INSTALLDIR/lib/libsciquadmath.so* $LIBTHIRDPARTYDIR/redist/
+      cp -d $INSTALLDIR/lib/libscigfortran.so* $LIBTHIRDPARTYDIR/redist/
+      cp -d $INSTALLDIR/lib/libscigcc_s.so* $LIBTHIRDPARTYDIR/redist/
+      cp -d $INSTALLDIR/lib/libscistdc++.so* $LIBTHIRDPARTYDIR/redist/
 
       # In case these libraries are not found on the system.
       #
