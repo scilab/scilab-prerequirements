@@ -114,7 +114,7 @@ download_dependencies() {
     [ ! -e libpng-$PNG_VERSION.tar.gz ] && curl -L -o libpng-$PNG_VERSION.tar.gz http://prdownloads.sourceforge.net/libpng/libpng-$PNG_VERSION.tar.gz
     [ ! -e gluegen-v$JOGL_VERSION.tar.7z ] && curl -L -o gluegen-v$JOGL_VERSION.tar.7z https://jogamp.org/deployment/archive/rc/v$JOGL_VERSION/archive/Sources/gluegen-v$JOGL_VERSION.tar.7z
     [ ! -e jogl-v$JOGL_VERSION.tar.7z ] && curl -L -o jogl-v$JOGL_VERSION.tar.7z https://jogamp.org/deployment/archive/rc/v$JOGL_VERSION/archive/Sources/jogl-v$JOGL_VERSION.tar.7z
-    [ ! -d OpenXLSX ] && git clone git@github.com:troldal/OpenXLSX.git
+    [ ! -d OpenXLSX ] && git clone https://github.com/troldal/OpenXLSX.git
     # xmlgraphics-commons is included within FOP
     # Batik is included within FOP
     [ ! -e fop-$FOP_VERSION-bin.zip ] && curl -L -o fop-$FOP_VERSION-bin.zip http://apache.mediamirrors.org//xmlgraphics/fop/binaries/fop-$FOP_VERSION-bin.zip
