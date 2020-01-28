@@ -228,6 +228,7 @@ build_hdf5() {
     tar -xzf hdf5-$HDF5_VERSION.tar.gz
     cd hdf5-$HDF5_VERSION
     sed -i -e 's|//int i1, i2;|/* int i1, i2; */|' tools/lib/h5diff.c
+    sed -i "/LD_LIBRARY_PATH=\"\$\$LD_LIBRARY_PATH/,+1d" src/Makefile.in
     ./configure "$@" --with-zlib=$INSTALLDIR --enable-cxx --prefix=
     make
     make install DESTDIR=$INSTALLDIR
