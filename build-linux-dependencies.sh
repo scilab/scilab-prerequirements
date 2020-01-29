@@ -66,7 +66,7 @@ echo
 ################################
 ##### DEPENDENCIES VERSION #####
 ################################
-GCC_VERSION=8.3.0
+GCC_VERSION=9.2.0
 OCAML_VERSION=4.01.0
 LAPACK_VERSION=3.6.0
 ATLAS_VERSION=3.10.2
@@ -87,7 +87,7 @@ TCL_VERSION=8.5.15
 TK_VERSION=8.5.15
 ZLIB_VERSION=1.2.11
 PNG_VERSION=1.6.37
-JOGL_VERSION=2.2.4
+JOGL_VERSION=2.3.2
 FOP_VERSION=2.0
 OPENXLSX_VERSION=
 
@@ -112,9 +112,10 @@ download_dependencies() {
     [ ! -e tk$TK_VERSION-src.tar.gz ] && curl -L -o tk$TK_VERSION-src.tar.gz http://prdownloads.sourceforge.net/tcl/tk$TK_VERSION-src.tar.gz
     [ ! -e zlib-$ZLIB_VERSION.tar.gz ] && curl -L -o zlib-$ZLIB_VERSION.tar.gz http://downloads.sourceforge.net/project/libpng/zlib/$ZLIB_VERSION/zlib-$ZLIB_VERSION.tar.gz
     [ ! -e libpng-$PNG_VERSION.tar.gz ] && curl -L -o libpng-$PNG_VERSION.tar.gz http://prdownloads.sourceforge.net/libpng/libpng-$PNG_VERSION.tar.gz
-    [ ! -e gluegen-v$JOGL_VERSION.tar.7z ] && curl -L -o gluegen-v$JOGL_VERSION.tar.7z https://jogamp.org/deployment/archive/rc/v$JOGL_VERSION/archive/Sources/gluegen-v$JOGL_VERSION.tar.7z
-    [ ! -e jogl-v$JOGL_VERSION.tar.7z ] && curl -L -o jogl-v$JOGL_VERSION.tar.7z https://jogamp.org/deployment/archive/rc/v$JOGL_VERSION/archive/Sources/jogl-v$JOGL_VERSION.tar.7z
-    [ ! -d OpenXLSX ] && git clone https://github.com/troldal/OpenXLSX.git
+    [ ! -e gluegen-v$JOGL_VERSION.tar.xz ] && curl -L -o gluegen-v$JOGL_VERSION.tar.xz https://jogamp.org/deployment/archive/rc/v$JOGL_VERSION/archive/Sources/gluegen-v$JOGL_VERSION.tar.xz
+    [ ! -e gluegen-jcpp-v$JOGL_VERSION.zip ] && curl -L -o gluegen-jcpp-v$JOGL_VERSION.zip https://github.com/JogAmp/jcpp/archive/master.zip
+    [ ! -e jogl-v$JOGL_VERSION.tar.xz ] && curl -L -o jogl-v$JOGL_VERSION.tar.xz https://jogamp.org/deployment/archive/rc/v$JOGL_VERSION/archive/Sources/jogl-v$JOGL_VERSION.tar.xz
+    [ ! -d OpenXLSX ] && git clone git@github.com:troldal/OpenXLSX.git
     # xmlgraphics-commons is included within FOP
     # Batik is included within FOP
     [ ! -e fop-$FOP_VERSION-bin.zip ] && curl -L -o fop-$FOP_VERSION-bin.zip http://apache.mediamirrors.org//xmlgraphics/fop/binaries/fop-$FOP_VERSION-bin.zip
@@ -125,7 +126,7 @@ download_dependencies() {
 ####################
 
 build_gcc() {
-	PATH=~/bin/:/usr/bin:/bin
+	PATH=/home/$USER/bin:/usr/bin:/bin
 
 	rm -fr gcc-$GCC_VERSION
 	if [ ! -d gcc-$GCC_VERSION ]; then
@@ -154,8 +155,8 @@ build_gcc() {
 	cp -a $INSTALLDIR$LIBDIR/libgfortran.so.5.0.0 $INSTALLDIR/lib/libscigfortran.so.5
 	patchelf --set-soname libscigcc_s.so.1 $INSTALLDIR$LIBDIR/libgcc_s.so.1
 	cp -a $INSTALLDIR$LIBDIR/libgcc_s.so.1 $INSTALLDIR/lib/libscigcc_s.so.1
-	patchelf --set-soname libscistdc++.so.6 $INSTALLDIR$LIBDIR/libstdc++.so.6.0.25
-	cp -a $INSTALLDIR$LIBDIR/libstdc++.so.6.0.25 $INSTALLDIR/lib/libscistdc++.so.6
+	patchelf --set-soname libscistdc++.so.6 $INSTALLDIR$LIBDIR/libstdc++.so.6.0.27
+	cp -a $INSTALLDIR$LIBDIR/libstdc++.so.6.0.27 $INSTALLDIR/lib/libscistdc++.so.6
 	
         cd ../..
 }
@@ -503,12 +504,14 @@ build_suitesparse() {
 build_gluegen() {
     [ -d gluegen-v$JOGL_VERSION ] && rm -fr gluegen-v$JOGL_VERSION
     
-    7za x gluegen-v$JOGL_VERSION.tar.7z
-    tar -xf gluegen-v$JOGL_VERSION.tar
-    rm gluegen-v$JOGL_VERSION.tar
+    tar -xJf gluegen-v$JOGL_VERSION.tar.xz
+    cd gluegen-v$JOGL_VERSION
+    unzip ../gluegen-jcpp-v$JOGL_VERSION.zip
+    rm -fr jcpp && mv jcpp-master jcpp
+    cd ..
 
     export ANT_HOME=$(pwd)/$SPECIFICDIR/java/ant
-    export JAVA_HOME=$(pwd)/$SPECIFICDIR/java/jdk1.8.0_65
+    export JAVA_HOME=/home/$USER/jdk
     cd gluegen-v$JOGL_VERSION/make
     ../../$SPECIFICDIR/java/ant/bin/ant
     cd -
@@ -522,13 +525,11 @@ build_gluegen() {
 build_jogl() {
     [ -d jogl-v$JOGL_VERSION ] && rm -fr jogl-v$JOGL_VERSION
 
-    7za x jogl-v$JOGL_VERSION.tar.7z
-    tar -xf jogl-v$JOGL_VERSION.tar
-    rm jogl-v$JOGL_VERSION.tar
+    tar -xJf jogl-v$JOGL_VERSION.tar.xz
 
     ln -fs gluegen-v$JOGL_VERSION gluegen
     export ANT_HOME=$(pwd)/$SPECIFICDIR/java/ant
-    export JAVA_HOME=$(pwd)/$SPECIFICDIR/java/jdk1.8.0_65
+    export JAVA_HOME=/home/$USER/jdk
     cd jogl-v$JOGL_VERSION/make
     ../../$SPECIFICDIR/java/ant/bin/ant
     cd -
@@ -540,7 +541,8 @@ build_jogl() {
 build_openxlsx() {
     cd OpenXLSX
     git clean -fXd OpenXLSX
-    
+
+    rm -fr build    
     mkdir build && cd build
     cmake ..
     make
@@ -804,7 +806,6 @@ do
     ;;
 
   "all")
-    build_gcc
     build_openblas
     build_ant
     build_eigen
@@ -820,7 +821,7 @@ do
     build_matio
     build_openssl
     build_curl
-    build_OpenXLSX
+    build_openxlsx
 
     exit 0;
     ;;

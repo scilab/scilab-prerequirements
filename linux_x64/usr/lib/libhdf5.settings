@@ -4,7 +4,7 @@
 General Information:
 -------------------
 		   HDF5 Version: 1.8.14
-		  Configured on: Tue Jan 28 11:32:26 CET 2020
+		  Configured on: Wed Jan 29 11:48:52 CET 2020
 		  Configured by: buildscilab@bruvwo033.esi-group.com
 		 Configure mode: production
 		    Host system: x86_64-unknown-linux-gnu
@@ -16,9 +16,9 @@ General Information:
 Compiling Options:
 ------------------
                Compilation Mode: production
-                     C Compiler: /usr/lib64/ccache/gcc ( gcc (GCC) 8.3.0)
+                     C Compiler: /usr/bin/gcc ( gcc (GCC) 4.4.7 20120313 )
                          CFLAGS: -O2 -g
-                      H5_CFLAGS:   -ansi -pedantic -Wall -W -Wundef -Wshadow -Wpointer-arith -Wbad-function-cast -Wcast-qual -Wcast-align -Wwrite-strings -Wconversion -Waggregate-return -Wstrict-prototypes -Wmissing-prototypes -Wmissing-declarations -Wredundant-decls -Wnested-externs -Winline -O -fomit-frame-pointer -finline-functions
+                      H5_CFLAGS: -std=c99 -pedantic -Wall -Wextra -Wundef -Wshadow -Wpointer-arith -Wbad-function-cast -Wcast-qual -Wcast-align -Wwrite-strings -Wconversion -Waggregate-return -Wstrict-prototypes -Wmissing-prototypes -Wmissing-declarations -Wredundant-decls -Wnested-externs -Winline -Wno-long-long -Wfloat-equal -Wmissing-format-attribute -Wmissing-noreturn -Wpacked -Wdisabled-optimization -Wformat=2 -Wunreachable-code -Wendif-labels -Wdeclaration-after-statement -Wold-style-definition -Winvalid-pch -Wvariadic-macros -Wnonnull -Winit-self -Wmissing-include-dirs -Wswitch-default -Wswitch-enum -Wunused-macros -Wunsafe-loop-optimizations -Wc++-compat -Wstrict-overflow -Wlogical-op -Wlarger-than=2048 -Wvla -Wsync-nand -Wframe-larger-than=16384 -Wpacked-bitfield-compat -O3 -fomit-frame-pointer -finline-functions
                       AM_CFLAGS: 
                        CPPFLAGS: 
                     H5_CPPFLAGS: -D_POSIX_C_SOURCE=199506L   -DNDEBUG -UH5_DEBUG_API
@@ -40,7 +40,7 @@ Languages:
                         Fortran: no
 
                             C++: yes
-                   C++ Compiler: /usr/lib64/ccache/g++ ( g++ (GCC) 8.3.0)
+                   C++ Compiler: /usr/bin/g++ ( g++ (GCC) 4.4.7 20120313 )
                       C++ Flags: -O2 -g
                    H5 C++ Flags:  
                    AM C++ Flags: 
