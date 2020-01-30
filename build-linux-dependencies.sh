@@ -292,6 +292,7 @@ build_openssl() {
     cd openssl-$OPENSSL_VERSION
     ./config shared --prefix=$INSTALLDIR --openssldir=$INSTALLDIR
     make depend all
+    make install
 
     # install at the right location
     cp -a -t $INSTALLDIR/lib/ libssl.so* libcrypto.so*
