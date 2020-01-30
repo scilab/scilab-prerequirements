@@ -140,8 +140,8 @@ build_gcc() {
 	cd gcc-build
 	find -name config.cache -delete
 	../configure --prefix=$INSTALLDIR --enable-language=c,c++,fortran \
-                     --disable-multilib --disable-bootstrap
-        make
+	             --disable-multilib --disable-bootstrap
+	make
         make install
 
 	# cc bin is used by cmake
@@ -152,9 +152,8 @@ build_gcc() {
 	patchelf --set-soname libsciquadmath.so.0 $INSTALLDIR$LIBDIR/libquadmath.so.0.0.0
 	cp -a $INSTALLDIR$LIBDIR/libquadmath.so.0.0.0 $INSTALLDIR/lib/libsciquadmath.so.0
 	patchelf --set-soname libscigfortran.so.5 $INSTALLDIR$LIBDIR/libgfortran.so.5.0.0
+	patchelf --replace-needed libquadmath.so.0 libsciquadmath.so.0 $INSTALLDIR$LIBDIR/libgfortran.so.5.0.0
 	cp -a $INSTALLDIR$LIBDIR/libgfortran.so.5.0.0 $INSTALLDIR/lib/libscigfortran.so.5
-	patchelf --set-soname libscigcc_s.so.1 $INSTALLDIR$LIBDIR/libgcc_s.so.1
-	cp -a $INSTALLDIR$LIBDIR/libgcc_s.so.1 $INSTALLDIR/lib/libscigcc_s.so.1
 	patchelf --set-soname libscistdc++.so.6 $INSTALLDIR$LIBDIR/libstdc++.so.6.0.27
 	cp -a $INSTALLDIR$LIBDIR/libstdc++.so.6.0.27 $INSTALLDIR/lib/libscistdc++.so.6
 	
