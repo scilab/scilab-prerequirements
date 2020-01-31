@@ -66,12 +66,12 @@ echo
 ################################
 ##### DEPENDENCIES VERSION #####
 ################################
-GCC_VERSION=9.2.0
+GCC_VERSION=8.3.0
 OCAML_VERSION=4.01.0
 LAPACK_VERSION=3.6.0
 ATLAS_VERSION=3.10.2
 OPENBLAS_VERSION=0.3.7
-ANT_VERSION=1.9.4
+ANT_VERSION=1.10.0
 ARPACK_VERSION=3.1.5
 CURL_VERSION=7.64.1
 EIGEN_VERSION=3.3.2
@@ -154,8 +154,8 @@ build_gcc() {
 	patchelf --set-soname libscigfortran.so.5 $INSTALLDIR$LIBDIR/libgfortran.so.5.0.0
 	patchelf --replace-needed libquadmath.so.0 libsciquadmath.so.0 $INSTALLDIR$LIBDIR/libgfortran.so.5.0.0
 	cp -a $INSTALLDIR$LIBDIR/libgfortran.so.5.0.0 $INSTALLDIR/lib/libscigfortran.so.5
-	patchelf --set-soname libscistdc++.so.6 $INSTALLDIR$LIBDIR/libstdc++.so.6.0.27
-	cp -a $INSTALLDIR$LIBDIR/libstdc++.so.6.0.27 $INSTALLDIR/lib/libscistdc++.so.6
+	patchelf --set-soname libscistdc++.so.6 $INSTALLDIR$LIBDIR/libstdc++.so.6.0.25
+	cp -a $INSTALLDIR$LIBDIR/libstdc++.so.6.0.25 $INSTALLDIR/lib/libscistdc++.so.6
 	
         cd ../..
 }
@@ -205,10 +205,6 @@ build_arpack() {
     make install DESTDIR=$INSTALLDIR
 
     cd -
-
-    # remove gfortran stdlibs as they are provided as sci prefixed
-    patchelf --remove-needed libquadmath.so.0 $INSTALLDIR/lib/libarpack.so
-
     clean_static
 }
 
@@ -821,7 +817,6 @@ do
     build_matio
     build_openssl
     build_curl
-    build_openxlsx
 
     exit 0;
     ;;
