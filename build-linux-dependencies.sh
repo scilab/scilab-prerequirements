@@ -675,6 +675,12 @@ do
       rm -f $LIBTHIRDPARTYDIR/libhdf5.*
       cp -d $INSTALLDIR/lib/libhdf5.* $LIBTHIRDPARTYDIR/
 
+      rm -f $LIBTHIRDPARTYDIR/libhdf5_hl_cpp.*
+      cp -d $INSTALLDIR/lib/libhdf5_hl_cpp.* $LIBTHIRDPARTYDIR/
+
+      rm -f $LIBTHIRDPARTYDIR/libhdf5_cpp.*
+      cp -d $INSTALLDIR/lib/libhdf5_cpp.* $LIBTHIRDPARTYDIR/
+
       rm -f $LIBTHIRDPARTYDIR/libmatio.*
       cp -d $INSTALLDIR/lib/libmatio.* $LIBTHIRDPARTYDIR/
 
