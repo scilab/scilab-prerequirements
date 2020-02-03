@@ -766,10 +766,10 @@ do
       do
         [[ $file == *.debug ]] && continue
         objcopy --only-keep-debug $file $file.debug
-        objcopy --strip-debug $file
-        objcopy --add-gnu-debuglink=$file.debug $file || true
+        [ -f  $file.debug ] && objcopy --strip-debug $file
+        [ -f  $file.debug ] && objcopy --add-gnu-debuglink=$file.debug $file || true
 
-        patchelf --remove-rpath $file || true
+        patchelf --remove-rpath $file
       done
 
       shift
