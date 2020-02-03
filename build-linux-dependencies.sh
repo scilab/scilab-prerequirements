@@ -198,7 +198,7 @@ build_arpack() {
 
     tar -xzf arpack-ng-$ARPACK_VERSION.tar.gz
     cd arpack-ng-$ARPACK_VERSION
-    ./configure "$@" --prefix=  F77=gfortran \
+    ./configure "$@" --prefix=  F77=gfortran LD=gcc \
         --with-blas="$INSTALLDIR/lib/libblas.so" \
         --with-lapack="$INSTALLDIR/lib/liblapack.so"
     make
@@ -549,7 +549,7 @@ build_openxlsx() {
 
 clean_static() {
         rm -f $INSTALLDIR/lib/*.la # Avoid message about moved library while compiling
-        find $INSTALLDIR/lib \( -name '*.a' -or -name '*.a.*' \) -a -not -name 'libgcc.a' -exec rm {} +
+        find $INSTALLDIR/lib \( -name '*.a' -or -name '*.a.*' \) -a -not -name 'libgcc.a' -a -not -name 'libasmrun.a' -exec rm {} +
 }
 
 #########################
@@ -759,14 +759,17 @@ do
       ln -fs libncurses.so.5.7 $LIBTHIRDPARTYDIR/redist/libncurses.so
 
 
-      # Strip libraries (exporting the debuginfo to another file) to
+      # 1. Strip libraries (exporting the debuginfo to another file) to
       # reduce file size and thus startup time
+      # 2. remove rpath as LD_LIBRARY_PATH is set on the startup script
       find $LIBTHIRDPARTYDIR -name '*.so*' -type f | while read file ;
       do
         [[ $file == *.debug ]] && continue
         objcopy --only-keep-debug $file $file.debug
         objcopy --strip-debug $file
         objcopy --add-gnu-debuglink=$file.debug $file || true
+
+        patchelf --remove-rpath $file || true
       done
 
       shift
