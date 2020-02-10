@@ -6,5 +6,5 @@ includedir=${prefix}/include
 Name: MATIO
 Description: MATIO Library
 Version: 1.5.2
-Libs: -L${libdir} -lmatio -L/home/scilab/work/linux-prerequisites-sources/trunk/Dev-Tools/SE/Prerequirements/linux/usr/lib -lhdf5 -L/home/scilab/work/linux-prerequisites-sources/trunk/Dev-Tools/SE/Prerequirements/linux/usr/lib -lz
-Cflags: -I${includedir} -I/home/scilab/work/linux-prerequisites-sources/trunk/Dev-Tools/SE/Prerequirements/linux/usr/include -I/home/scilab/work/linux-prerequisites-sources/trunk/Dev-Tools/SE/Prerequirements/linux/usr/include
+Libs: -L${libdir} -lmatio -L/home/buildscilab/work/scilab-prerequirements/linux/usr/lib -lhdf5 -L/home/buildscilab/work/scilab-prerequirements/linux/usr/lib -lz
+Cflags: -I${includedir} -I/home/buildscilab/work/scilab-prerequirements/linux/usr/include -I/home/buildscilab/work/scilab-prerequirements/linux/usr/include

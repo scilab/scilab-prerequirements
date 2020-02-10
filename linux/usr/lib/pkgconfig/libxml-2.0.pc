@@ -5,9 +5,9 @@ includedir=${prefix}/include
 modules=1
 
 Name: libXML
-Version: 2.9.1
+Version: 2.9.9
 Description: libXML library version2.
 Requires:
 Libs: -L${libdir} -lxml2
-Libs.private:   -L/home/scilab/work/linux-prerequisites-sources/trunk/Dev-Tools/SE/Prerequirements/linux/usr/lib -lz  -lm  
+Libs.private:   -L/home/buildscilab/work/scilab-prerequirements/linux/usr/lib -lz   -lm  
 Cflags: -I${includedir}/libxml2 

@@ -92,8 +92,8 @@ CLINKERBASE="gcc"
 # from the hdf5 build. The order of the flags is intended to give precedence
 # to the user's flags.
 H5BLD_CFLAGS=" -O2 -g"
-H5BLD_CPPFLAGS="-I/home/scilab/work/Prerequirements/linux/usr/include -D_FILE_OFFSET_BITS=64 -D_LARGEFILE_SOURCE -D_LARGEFILE64_SOURCE -D_BSD_SOURCE  "
-H5BLD_LDFLAGS=" -L/lib -L/home/scilab/work/Prerequirements/linux/usr/lib -O2 -g"
+H5BLD_CPPFLAGS="-I/home/buildscilab/work/scilab-prerequirements/linux/usr/include -D_FILE_OFFSET_BITS=64 -D_LARGEFILE_SOURCE -D_LARGEFILE64_SOURCE -D_BSD_SOURCE  "
+H5BLD_LDFLAGS=" -L/lib -L/home/buildscilab/work/scilab-prerequirements/linux/usr/lib -O2 -g"
 H5BLD_LIBS=" -lz -lrt -ldl -lm "
 
 CC="${HDF5_CC:-$CCBASE}"
