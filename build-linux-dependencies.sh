@@ -549,7 +549,7 @@ build_openxlsx() {
 
 clean_static() {
         rm -f $INSTALLDIR/lib/*.la # Avoid message about moved library while compiling
-        find $INSTALLDIR/lib \( -name '*.a' -or -name '*.a.*' \) -a -not -name 'libgcc.a' -a -not -name 'libasmrun.a' -exec rm {} +
+        find $INSTALLDIR/lib \( -name '*.a' -or -name '*.a.*' \) -a -not -name 'libgcc.a' -a -not -wholename '*/lib/ocaml/*.a' -exec rm {} +
 }
 
 #########################
