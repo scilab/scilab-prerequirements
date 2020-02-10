@@ -198,7 +198,7 @@ build_arpack() {
 
     tar -xzf arpack-ng-$ARPACK_VERSION.tar.gz
     cd arpack-ng-$ARPACK_VERSION
-    ./configure "$@" --prefix=  F77=gfortran LD=gcc \
+    ./configure "$@" --prefix=  F77=gfortran \
         --with-blas="$INSTALLDIR/lib/libblas.so" \
         --with-lapack="$INSTALLDIR/lib/liblapack.so"
     make
