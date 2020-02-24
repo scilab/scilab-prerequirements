@@ -226,7 +226,7 @@ build_hdf5() {
     sed -i -e 's|//int i1, i2;|/* int i1, i2; */|' tools/lib/h5diff.c
     sed -i "/LD_LIBRARY_PATH=\"\$\$LD_LIBRARY_PATH/,+1d" src/Makefile.in
     ./configure "$@" --with-zlib=$INSTALLDIR --enable-cxx --prefix=
-    make
+    make CXXFLAGS="-std=c++11 -D_GLIBCXX_USE_CXX11_ABI=0"
     make install DESTDIR=$INSTALLDIR
     cd -
 
