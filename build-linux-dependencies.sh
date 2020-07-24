@@ -153,6 +153,7 @@ build_gcc() {
 	cp -a $INSTALLDIR$LIBDIR/libquadmath.so.0.0.0 $INSTALLDIR/lib/libsciquadmath.so.0
 	patchelf --set-soname libscigfortran.so.5 $INSTALLDIR$LIBDIR/libgfortran.so.5.0.0
 	patchelf --replace-needed libquadmath.so.0 libsciquadmath.so.0 $INSTALLDIR$LIBDIR/libgfortran.so.5.0.0
+	patchelf --remove-rpath $INSTALLDIR$LIBDIR/libgfortran.so.5.0.0
 	cp -a $INSTALLDIR$LIBDIR/libgfortran.so.5.0.0 $INSTALLDIR/lib/libscigfortran.so.5
 	patchelf --set-soname libscistdc++.so.6 $INSTALLDIR$LIBDIR/libstdc++.so.6.0.25
 	cp -a $INSTALLDIR$LIBDIR/libstdc++.so.6.0.25 $INSTALLDIR/lib/libscistdc++.so.6
