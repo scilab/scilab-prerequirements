@@ -90,7 +90,7 @@ while test $# -gt 0; do
         ;;
 
     --protocols)
-        for protocol in DICT FILE FTP FTPS GOPHER HTTP HTTPS IMAP IMAPS LDAP LDAPS POP3 POP3S RTSP SMB SMBS SMTP SMTPS TELNET TFTP; do
+        for protocol in DICT FILE FTP FTPS GOPHER HTTP HTTPS IMAP IMAPS POP3 POP3S RTSP SMB SMBS SMTP SMTPS TELNET TFTP; do
             echo "$protocol"
         done
         ;;
@@ -161,7 +161,7 @@ while test $# -gt 0; do
            CURLLIBDIR=""
         fi
         if test "Xno" = "Xyes"; then
-          echo ${CURLLIBDIR}-lcurl -lssl -lcrypto -lldap -lz -lrt
+          echo ${CURLLIBDIR}-lcurl -lssl -lcrypto -lz -lrt
         else
           echo ${CURLLIBDIR}-lcurl
         fi
@@ -172,7 +172,7 @@ while test $# -gt 0; do
 
     --static-libs)
         if test "Xyes" != "Xno" ; then
-          echo ${exec_prefix}/lib/libcurl.a -O2 -g -L/home/buildscilab/work/scilab-prerequirements/linux_x64/usr/lib -L/home/buildscilab/work/scilab-prerequirements/linux_x64/usr/lib -lssl -lcrypto -lldap -lz -lrt
+          echo ${exec_prefix}/lib/libcurl.a -O2 -g -L/home/buildscilab/work/scilab-prerequirements/linux_x64/usr/lib -L/home/buildscilab/work/scilab-prerequirements/linux_x64/usr/lib -lssl -lcrypto -lz -lrt
         else
           echo "curl was built with static libraries disabled" >&2
           exit 1
@@ -180,7 +180,7 @@ while test $# -gt 0; do
         ;;
 
     --configure)
-        echo " '--without-ca-bundle' '--with-ca-fallback' '--with-ssl=/home/buildscilab/work/scilab-prerequirements/linux_x64/usr' '--without-nss' '--with-zlib=/home/buildscilab/work/scilab-prerequirements/linux_x64/usr' '--prefix=' 'CFLAGS=-O2 -g' 'LDFLAGS=-O2 -g'"
+        echo " '--without-ca-bundle' '--with-ca-fallback' '--with-ssl=/home/buildscilab/work/scilab-prerequirements/linux_x64/usr' '--without-nss' '--with-zlib=/home/buildscilab/work/scilab-prerequirements/linux_x64/usr' '--disable-ldap' '--prefix=' 'CFLAGS=-O2 -g' 'LDFLAGS=-O2 -g'"
         ;;
 
     *)

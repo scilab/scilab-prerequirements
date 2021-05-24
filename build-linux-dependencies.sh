@@ -385,6 +385,7 @@ build_curl() {
 	--without-ca-bundle --with-ca-fallback \
         --with-ssl=$INSTALLDIR --without-nss \
         --with-zlib=$INSTALLDIR \
+	--disable-ldap \
         --prefix= \
         CFLAGS="-O2 -g"
     make 
