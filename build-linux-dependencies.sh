@@ -67,7 +67,7 @@ echo
 ##### DEPENDENCIES VERSION #####
 ################################
 GCC_VERSION=8.3.0
-OCAML_VERSION=4.01.0
+OCAML_VERSION=4.12.0
 LAPACK_VERSION=3.6.0
 ATLAS_VERSION=3.10.2
 OPENBLAS_VERSION=0.3.7
@@ -94,6 +94,9 @@ OPENXLSX_VERSION=
 ##### DOWNLOAD #####
 ####################
 download_dependencies() {
+    # use system libcurl if available
+    [ -L $USRDIR/libcurl.so ] && export LD_PRELOAD=$USRDIR/libcurl.so
+
     [ ! -e gcc-$GCC_VERSION.tar.gz ] && curl -L -o gcc-$GCC_VERSION.tar.gz  ftp://ftp.lip6.fr/pub/gcc/releases/gcc-$GCC_VERSION/gcc-$GCC_VERSION.tar.gz 
     [ ! -e apache-ant-$ANT_VERSION-bin.tar.gz ] && curl -L -o apache-ant-$ANT_VERSION-bin.tar.gz http://archive.apache.org/dist/ant/binaries/apache-ant-$ANT_VERSION-bin.tar.gz
     [ ! -e OpenBLAS-$OPENBLAS_VERSION.tar.gz ] && curl -L -o OpenBLAS-$OPENBLAS_VERSION.tar.gz https://github.com/xianyi/OpenBLAS/archive/v$OPENBLAS_VERSION.tar.gz
@@ -104,7 +107,7 @@ download_dependencies() {
     [ ! -e hdf5-$HDF5_VERSION.tar.gz ] && curl -L -o hdf5-$HDF5_VERSION.tar.gz https://support.hdfgroup.org/ftp/HDF5/releases/hdf5-1.8/hdf5-$HDF5_VERSION/src/hdf5-$HDF5_VERSION.tar.gz
     [ ! -e libxml2-$LIBXML2_VERSION.tar.gz ] && curl -L -o libxml2-$LIBXML2_VERSION.tar.gz http://xmlsoft.org/sources/libxml2-$LIBXML2_VERSION.tar.gz
     [ ! -e matio-$MATIO_VERSION.tar.gz ] && curl -L -o matio-$MATIO_VERSION.tar.gz http://downloads.sourceforge.net/project/matio/matio/$MATIO_VERSION/matio-$MATIO_VERSION.tar.gz
-    [ ! -e ocaml-$OCAML_VERSION.tar.gz ] && curl -L -o ocaml-$OCAML_VERSION.tar.gz http://caml.inria.fr/pub/distrib/ocaml-4.01/ocaml-$OCAML_VERSION.tar.gz
+    [ ! -e ocaml-$OCAML_VERSION.tar.gz ] && curl -L -o ocaml-$OCAML_VERSION.tar.gz https://github.com/ocaml/ocaml/archive/$OCAML_VERSION.tar.gz
     [ ! -e openssl-$OPENSSL_VERSION.tar.gz ] && curl -L -o openssl-$OPENSSL_VERSION.tar.gz http://www.openssl.org/source/openssl-$OPENSSL_VERSION.tar.gz
     [ ! -e SuiteSparse-$SUITESPARSE_VERSION.tar.gz ] && curl -L -o SuiteSparse-$SUITESPARSE_VERSION.tar.gz http://faculty.cse.tamu.edu/davis/SuiteSparse/SuiteSparse-$SUITESPARSE_VERSION.tar.gz
     [ ! -e pcre-$PCRE_VERSION.tar.gz ] && curl -L -o pcre-$PCRE_VERSION.tar.gz https://ftp.pcre.org/pub/pcre/pcre-$PCRE_VERSION.tar.gz
@@ -551,7 +554,10 @@ build_openxlsx() {
 
 clean_static() {
         rm -f $INSTALLDIR/lib/*.la # Avoid message about moved library while compiling
-        find $INSTALLDIR/lib \( -name '*.a' -or -name '*.a.*' \) -a -not -name 'libgcc.a' -a -not -wholename '*/lib/ocaml/*.a' -exec rm {} +
+        find $INSTALLDIR/lib \( -name '*.a' -or -name '*.a.*' \) \
+		-a -not -wholename '*/gcc/*' \
+		-a -not -wholename '*/lib/ocaml/*.a' \
+		-exec rm {} +
 }
 
 #########################
