@@ -68,6 +68,8 @@ echo
 ################################
 GCC_VERSION=8.3.0
 OCAML_VERSION=4.12.0
+OCAML_FINDLIB_VERSION=1.9.1
+OCAML_NUM_VERSION=1.4
 LAPACK_VERSION=3.6.0
 ATLAS_VERSION=3.10.2
 OPENBLAS_VERSION=0.3.7
@@ -108,6 +110,8 @@ download_dependencies() {
     [ ! -e libxml2-$LIBXML2_VERSION.tar.gz ] && curl -L -o libxml2-$LIBXML2_VERSION.tar.gz http://xmlsoft.org/sources/libxml2-$LIBXML2_VERSION.tar.gz
     [ ! -e matio-$MATIO_VERSION.tar.gz ] && curl -L -o matio-$MATIO_VERSION.tar.gz http://downloads.sourceforge.net/project/matio/matio/$MATIO_VERSION/matio-$MATIO_VERSION.tar.gz
     [ ! -e ocaml-$OCAML_VERSION.tar.gz ] && curl -L -o ocaml-$OCAML_VERSION.tar.gz https://github.com/ocaml/ocaml/archive/$OCAML_VERSION.tar.gz
+    [ ! -e ocaml-findlib-$OCAML_FINDLIB_VERSION.tar.gz ] && curl -L -o ocaml-findlib-$OCAML_FINDLIB_VERSION.tar.gz https://github.com/ocaml/ocamlfind/archive/refs/tags/findlib-$OCAML_FINDLIB_VERSION.tar.gz
+    [ ! -e ocaml-num-$OCAML_NUM_VERSION.tar.gz ] && curl -L -o ocaml-num-$OCAML_NUM_VERSION.tar.gz https://github.com/ocaml/num/archive/refs/tags/v$OCAML_NUM_VERSION.tar.gz
     [ ! -e openssl-$OPENSSL_VERSION.tar.gz ] && curl -L -o openssl-$OPENSSL_VERSION.tar.gz http://www.openssl.org/source/openssl-$OPENSSL_VERSION.tar.gz
     [ ! -e SuiteSparse-$SUITESPARSE_VERSION.tar.gz ] && curl -L -o SuiteSparse-$SUITESPARSE_VERSION.tar.gz http://faculty.cse.tamu.edu/davis/SuiteSparse/SuiteSparse-$SUITESPARSE_VERSION.tar.gz
     [ ! -e pcre-$PCRE_VERSION.tar.gz ] && curl -L -o pcre-$PCRE_VERSION.tar.gz https://ftp.pcre.org/pub/pcre/pcre-$PCRE_VERSION.tar.gz
@@ -401,6 +405,7 @@ build_curl() {
 
 build_ocaml() {
     [ -d ocaml-$OCAML_VERSION ] && rm -fr ocaml-$OCAML_VERSION
+    rm -fr $INSTALLDIR/lib/ocaml
 
     tar -zxf ocaml-$OCAML_VERSION.tar.gz
     cd ocaml-$OCAML_VERSION
@@ -409,6 +414,27 @@ build_ocaml() {
     make install
     cd -
     echo "Do not forget to add $INSTALLDIR/bin/ to your PATH variable."
+}
+
+build_ocaml_findlib() {
+    [ -d ocamlfind-findlib-$OCAML_FINDLIB_VERSION ] && rm -fr ocamlfind-findlib-$OCAML_FINDLIB_VERSION
+
+    tar -zxf ocaml-findlib-$OCAML_FINDLIB_VERSION.tar.gz  
+    cd ocamlfind-findlib-$OCAML_FINDLIB_VERSION
+    ./configure "$@"
+    make
+    make install
+    cd -
+}
+
+build_ocaml_num() {
+    [ -d num-$OCAML_NUM_VERSION ] && rm -fr num-$OCAML_NUM_VERSION
+
+    tar -zxf ocaml-num-$OCAML_NUM_VERSION.tar.gz  
+    cd num-$OCAML_NUM_VERSION
+    make
+    make install
+    cd -
 }
 
 build_suitesparse() {
