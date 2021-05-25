@@ -404,7 +404,7 @@ build_ocaml() {
 
     tar -zxf ocaml-$OCAML_VERSION.tar.gz
     cd ocaml-$OCAML_VERSION
-    ./configure "$@" -prefix $INSTALLDIR
+    ./configure --disable-force-safe-string "$@" -prefix $INSTALLDIR
     make world bootstrap opt
     make install
     cd -
