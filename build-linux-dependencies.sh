@@ -97,7 +97,7 @@ OPENXLSX_VERSION=
 ####################
 download_dependencies() {
     # use system libcurl if available
-    [ -L $USRDIR/libcurl.so ] && export LD_PRELOAD=$USRDIR/libcurl.so
+    [ -L $USRDIR/libcurl.so.4 ] && export LD_LIBRARY_PATH=$USRDIR/libcurl.so.4 && export PATH=/usr/bin:$PATH
 
     [ ! -e gcc-$GCC_VERSION.tar.gz ] && curl -L -o gcc-$GCC_VERSION.tar.gz  ftp://ftp.lip6.fr/pub/gcc/releases/gcc-$GCC_VERSION/gcc-$GCC_VERSION.tar.gz 
     [ ! -e apache-ant-$ANT_VERSION-bin.tar.gz ] && curl -L -o apache-ant-$ANT_VERSION-bin.tar.gz http://archive.apache.org/dist/ant/binaries/apache-ant-$ANT_VERSION-bin.tar.gz
