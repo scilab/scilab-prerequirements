@@ -180,7 +180,7 @@ while test $# -gt 0; do
         ;;
 
     --configure)
-        echo " '--without-ca-bundle' '--with-ca-fallback' '--with-ssl=/home/buildscilab/work/scilab-prerequirements/linux/usr' '--without-nss' '--with-zlib=/home/buildscilab/work/scilab-prerequirements/linux/usr' '--prefix=' 'CFLAGS=-O2 -g' 'LDFLAGS=-O2 -g'"
+        echo " '--without-ca-bundle' '--with-ca-fallback' '--with-ssl=/home/buildscilab/work/scilab-prerequirements/linux/usr' '--without-nss' '--with-zlib=/home/buildscilab/work/scilab-prerequirements/linux/usr' '--disable-ldap' '--prefix=' 'CFLAGS=-O2 -g' 'LDFLAGS=-O2 -g'"
         ;;
 
     *)
